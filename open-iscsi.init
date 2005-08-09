@@ -1,0 +1,75 @@
+#!/bin/sh
+#
+# iscsi		This shell script takes care of starting and stopping iscsi.
+#
+# chkconfig:	2345 11 20
+# description:	Start iSCSI to allow access to remote SCSI devices
+#
+# pidfile:	/var/run/iscsid.pid
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+# Source oident configureation.
+if [ -f /etc/sysconfig/iscsi ]; then
+	. /etc/sysconfig/iscsi
+fi
+
+# Check that networking is up.
+if is_yes "${NETWORKING}"; then
+	if [ ! -f /var/lock/subsys/network -a "$1" != stop -a "$1" != status ]; then
+		msg_network_down "iSCSI Initiator"
+		exit 1
+	fi
+else
+	exit 0
+fi
+
+[ -z "$ISCSI_CONNFAILTIMEOUT" ] && ISCSI_CONNFAILTIMEOUT=30
+
+RETVAL=0
+# See how we were called.
+case "$1" in
+  start)
+	# Start daemons.
+	if [ ! -f /var/lock/subsys/iscsid ]; then
+		msg_starting "iSCSI Initiator"
+		daemon iscsid
+		RETVAL=$?
+		[ $RETVAL -eq 0 ] && touch /var/lock/subsys/iscsid
+	else
+		msg_already_running "iSCSI Initiator"
+	fi
+	;;
+  stop)
+	# Stop daemons.
+	if [ -f /var/lock/subsys/iscsid ]; then
+		msg_stopping "iSCSI Initiator"
+		killproc iscsid
+		rm -f /var/lock/subsys/iscsid >/dev/null 2>&1
+	else
+		msg_not_running "iSCSI Initiator"
+	fi	
+	;;
+  restart|force-reload)
+	$0 stop
+	$0 start
+	exit $?
+	;;
+  status)
+	status iscsid
+	exit $?
+	;;
+#  reload)
+#	msg_reloading iscsi
+#	killproc iscsi -HUP
+#	;;
+  *)
+	msg_usage "$0 {start|stop|restart|force-reload|status}"
+	exit 3
+esac
+
+exit $RETVAL
