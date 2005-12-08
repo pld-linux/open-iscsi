@@ -52,7 +52,7 @@ case "$1" in
 		rm -f /var/lock/subsys/iscsid >/dev/null 2>&1
 	else
 		msg_not_running "iSCSI Initiator"
-	fi	
+	fi
 	;;
   restart|force-reload)
 	$0 stop
