@@ -6,12 +6,12 @@
 %bcond_without	userspace	# don't build userspace module
 %bcond_with	verbose		# verbose build (V=1)
 #
+%define		_rc  rc7-383
+%define		_rel 0.1
 Summary:	iSCSI - SCSI over IP
 Summary(pl):	iSCSI - SCSI po IP
 Name:		open-iscsi
 Version:	0.3
-%define		_rc  rc7-383
-%define		_rel 0.1
 Release:	%{_rel}
 License:	GPL
 Group:		Base/Kernel
@@ -20,8 +20,11 @@ Source0:	http://www.open-iscsi.org/bits/%{name}-%{version}%{_rc}.tar.gz
 Source1:	%{name}.init
 Source2:	%{name}.sysconfig
 URL:		http://www.open-iscsi.org/
-%{?with_dist_kernel:BuildRequires:	kernel-headers >= 2.6.0}
 BuildRequires:	db-devel
+%{?with_dist_kernel:BuildRequires:	kernel-headers >= 2.6.0}
+BuildRequires:	rpmbuild(macros) >= 1.268
+Requires(post,preun):	/sbin/chkconfig
+Requires:	rc-scripts
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %define		_sbindir	/sbin
@@ -142,9 +145,9 @@ install kernel/scsi_transport_iscsi-smp.ko \
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsi
 install %{SOURCE2} $RPM_BUILD_ROOT/etc/sysconfig/iscsi
 
-:> $RPM_BUILD_ROOT/etc/initiatorname.iscsi
+:> $RPM_BUILD_ROOT%{_sysconfdir}/initiatorname.iscsi
 
-install etc/iscsid.conf $RPM_BUILD_ROOT/etc
+install etc/iscsid.conf $RPM_BUILD_ROOT%{_sysconfdir}
 
 install usr/iscsid usr/iscsiadm $RPM_BUILD_ROOT%{_sbindir}
 %endif
@@ -165,22 +168,16 @@ rm -rf $RPM_BUILD_ROOT
 %depmod %{_kernel_ver}smp
 
 %post
-/sbin/chkconfig --add iscsi
-#if [ -f /var/lock/subsys/iscsi ]; then
-#	/etc/rc.d/init.d/iscsi restart 1>&2
-#else
-#	echo "Type \"/etc/rc.d/init.d/iscsi start\" to start iscsi" 1>&2
-#fi
-
-if ! grep -q "^InitiatorName=[^ \t\n]" /etc/initiatorname.iscsi 2>/dev/null ; then
-	echo "InitiatorName=$(hostname -f)" >> /etc/initiatorname.iscsi
+if ! grep -q "^InitiatorName=[^ \t\n]" %{_sysconfdir}/initiatorname.iscsi 2>/dev/null ; then
+	echo "InitiatorName=$(hostname -f)" >> %{_sysconfdir}/initiatorname.iscsi
 fi
+
+/sbin/chkconfig --add iscsi
+#%%service iscsi restart
 
 %preun
 if [ "$1" = "0" ]; then
-#	if [ -f /var/lock/subsys/iscsi ]; then
-#		/etc/rc.d/init.d/iscsi stop >&2
-#	fi
+	%service iscsi stop
 	/sbin/chkconfig --del iscsi
 fi
 
@@ -189,9 +186,9 @@ fi
 %defattr(644,root,root,755)
 %doc README THANKS TODO
 %attr(755,root,root) %{_sbindir}/*
-%attr(750,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/iscsid.conf
-%attr(644,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/initiatorname.iscsi
-%attr(754,root,root) /etc/rc.d/init.d/iscsi            
+%attr(750,root,root) %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/iscsid.conf
+%attr(644,root,root) %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/initiatorname.iscsi
+%attr(754,root,root) /etc/rc.d/init.d/iscsi
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/sysconfig/iscsi
 %endif
 
