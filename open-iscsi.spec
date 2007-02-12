@@ -9,7 +9,7 @@
 %define		_rc  rc7-383
 %define		_rel 0.1
 Summary:	iSCSI - SCSI over IP
-Summary(pl):	iSCSI - SCSI po IP
+Summary(pl.UTF-8):   iSCSI - SCSI po IP
 Name:		open-iscsi
 Version:	0.3
 Release:	%{_rel}
@@ -37,17 +37,17 @@ storage router. The iSCSI protocol is an IETF-defined protocol for IP
 storage. For more information about the iSCSI protocol, refer to the
 IETF standards for IP storage at <http://www.ietf.org/>.
 
-%description -l pl
-Sterownik Linux iSCSI zachowuje siê jak inicjator protoko³u iSCSI do
-transportu zleceñ SCSI i odpowiedzi po sieci IP miêdzy klientem a
-urz±dzeniem docelowym obs³uguj±cym iSCSI, takim jak Cisco SN 5420.
-Protokó³ iSCSI jest zdefiniowany przez IETF do sk³adowania IP. Wiêcej
-informacji o protokole iSCSI znajduje siê w standardach IETF na
+%description -l pl.UTF-8
+Sterownik Linux iSCSI zachowuje siÄ™ jak inicjator protokoÅ‚u iSCSI do
+transportu zleceÅ„ SCSI i odpowiedzi po sieci IP miÄ™dzy klientem a
+urzÄ…dzeniem docelowym obsÅ‚ugujÄ…cym iSCSI, takim jak Cisco SN 5420.
+ProtokÃ³Å‚ iSCSI jest zdefiniowany przez IETF do skÅ‚adowania IP. WiÄ™cej
+informacji o protokole iSCSI znajduje siÄ™ w standardach IETF na
 <http://www.ietf.org/>.
 
 %package -n kernel-iscsi
 Summary:	ISCSI kernel module
-Summary(pl):	Modu³ j±dra ISCSI
+Summary(pl.UTF-8):   ModuÅ‚ jÄ…dra ISCSI
 Release:	%{_rel}@%{_kernel_ver_str}
 Group:		Base/Kernel
 Requires:	%{name} = %{version}-%{_rel}
@@ -55,12 +55,12 @@ Requires:	%{name} = %{version}-%{_rel}
 %description -n kernel-iscsi
 IP over SCSI kernel module.
 
-%description -n kernel-iscsi -l pl
-Modu³ j±dra dla protoko³u IP over SCSI.
+%description -n kernel-iscsi -l pl.UTF-8
+ModuÅ‚ jÄ…dra dla protokoÅ‚u IP over SCSI.
 
 %package -n kernel-smp-iscsi
 Summary:	ISCSI SMP kernel module
-Summary(pl):	Modu³ j±dra SMP ISCSI
+Summary(pl.UTF-8):   ModuÅ‚ jÄ…dra SMP ISCSI
 Release:	%{_rel}@%{_kernel_ver_str}
 Group:		Base/Kernel
 Requires:	%{name} = %{version}-%{_rel}
@@ -68,8 +68,8 @@ Requires:	%{name} = %{version}-%{_rel}
 %description -n kernel-smp-iscsi
 IP over SCSI SMP kernel module.
 
-%description -n kernel-smp-iscsi -l pl
-Modu³ j±dra SMP dla protoko³u IP over SCSI.
+%description -n kernel-smp-iscsi -l pl.UTF-8
+ModuÅ‚ jÄ…dra SMP dla protokoÅ‚u IP over SCSI.
 
 %prep
 %setup -q -n %{name}-%{version}%{_rc}
