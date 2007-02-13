@@ -9,7 +9,7 @@
 %define		_rc  rc7-383
 %define		_rel 0.1
 Summary:	iSCSI - SCSI over IP
-Summary(pl.UTF-8):   iSCSI - SCSI po IP
+Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
 Version:	0.3
 Release:	%{_rel}
@@ -47,7 +47,7 @@ informacji o protokole iSCSI znajduje się w standardach IETF na
 
 %package -n kernel-iscsi
 Summary:	ISCSI kernel module
-Summary(pl.UTF-8):   Moduł jądra ISCSI
+Summary(pl.UTF-8):	Moduł jądra ISCSI
 Release:	%{_rel}@%{_kernel_ver_str}
 Group:		Base/Kernel
 Requires:	%{name} = %{version}-%{_rel}
@@ -60,7 +60,7 @@ Moduł jądra dla protokołu IP over SCSI.
 
 %package -n kernel-smp-iscsi
 Summary:	ISCSI SMP kernel module
-Summary(pl.UTF-8):   Moduł jądra SMP ISCSI
+Summary(pl.UTF-8):	Moduł jądra SMP ISCSI
 Release:	%{_rel}@%{_kernel_ver_str}
 Group:		Base/Kernel
 Requires:	%{name} = %{version}-%{_rel}
