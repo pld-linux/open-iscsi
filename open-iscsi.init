@@ -5,7 +5,6 @@
 # chkconfig:	2345 11 20
 # description:	Start iSCSI to allow access to remote SCSI devices
 #
-# pidfile:	/var/run/iscsid.pid
 
 # Source function library.
 . /etc/rc.d/init.d/functions
@@ -28,18 +27,16 @@ else
 	exit 0
 fi
 
-[ -z "$ISCSI_CONNFAILTIMEOUT" ] && ISCSI_CONNFAILTIMEOUT=30
-
 RETVAL=0
-# See how we were called.
 case "$1" in
   start)
 	# Start daemons.
 	if [ ! -f /var/lock/subsys/iscsid ]; then
 		msg_starting "iSCSI Initiator"
-		daemon iscsid
+		daemon iscsid -u iscsi -g iscsi
 		RETVAL=$?
 		[ $RETVAL -eq 0 ] && touch /var/lock/subsys/iscsid
+		run_cmd "Logging into iSCSI targets" iscsiadm -m node -L automatic
 	else
 		msg_already_running "iSCSI Initiator"
 	fi
@@ -47,6 +44,7 @@ case "$1" in
   stop)
 	# Stop daemons.
 	if [ -f /var/lock/subsys/iscsid ]; then
+		run_cmd "Logging out from iSCSI targets" iscsiadm -m node -U all
 		msg_stopping "iSCSI Initiator"
 		killproc iscsid
 		rm -f /var/lock/subsys/iscsid >/dev/null 2>&1
@@ -63,13 +61,8 @@ case "$1" in
 	status iscsid
 	exit $?
 	;;
-#  reload)
-#	msg_reloading iscsi
-#	killproc iscsi -HUP
-#	;;
   *)
 	msg_usage "$0 {start|stop|restart|force-reload|status}"
 	exit 3
 esac
-
 exit $RETVAL
