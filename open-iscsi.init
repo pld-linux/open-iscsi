@@ -27,9 +27,7 @@ else
 	exit 0
 fi
 
-RETVAL=0
-case "$1" in
-  start)
+start() {
 	# Start daemons.
 	if [ ! -f /var/lock/subsys/iscsid ]; then
 		msg_starting "iSCSI Initiator"
@@ -40,8 +38,9 @@ case "$1" in
 	else
 		msg_already_running "iSCSI Initiator"
 	fi
-	;;
-  stop)
+}
+
+stop() {
 	# Stop daemons.
 	if [ -f /var/lock/subsys/iscsid ]; then
 		run_cmd "Logging out from iSCSI targets" iscsiadm -m node -U all
@@ -51,11 +50,19 @@ case "$1" in
 	else
 		msg_not_running "iSCSI Initiator"
 	fi
+}
+
+RETVAL=0
+case "$1" in
+  start)
+  	start
+	;;
+  stop)
+  	stop
 	;;
   restart|force-reload)
-	$0 stop
-	$0 start
-	exit $?
+	stop
+	start
 	;;
   status)
 	status iscsid
