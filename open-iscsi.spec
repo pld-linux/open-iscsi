@@ -1,5 +1,5 @@
 %define		_rc  865.15
-%define		_rel 1
+%define		_rel 2
 Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
@@ -16,6 +16,8 @@ BuildRequires:	db-devel
 BuildRequires:	rpmbuild(macros) >= 1.379
 Requires(post,preun):	/sbin/chkconfig
 Requires:	rc-scripts
+Provides:	group(iscsi)
+Provides:	user(iscsi)
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %define		_sbindir	/sbin
@@ -48,28 +50,31 @@ done
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT{%{_sbindir},%{_mandir}/man{1,5,8},/etc/{rc.d/init.d,sysconfig}}
+install -d $RPM_BUILD_ROOT{%{_sbindir},%{_mandir}/man8,/etc/{iscsi/ifaces,iscsi/nodes,iscsi/send_targets,rc.d/init.d,sysconfig}}
 
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsi
 install %{SOURCE2} $RPM_BUILD_ROOT/etc/sysconfig/iscsi
 
-:> $RPM_BUILD_ROOT%{_sysconfdir}/initiatorname.iscsi
-
-install etc/iscsid.conf $RPM_BUILD_ROOT%{_sysconfdir}
+install etc/iscsid.conf $RPM_BUILD_ROOT%{_sysconfdir}/iscsi
+:> $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/initiatorname.iscsi
 
 install usr/{iscsid,iscsiadm,iscsistart} utils/iscsi-iname $RPM_BUILD_ROOT%{_sbindir}
 install utils/fwparam_ibft/fwparam_ibft $RPM_BUILD_ROOT%{_sbindir}
 
+install doc/*.8 $RPM_BUILD_ROOT/%{_mandir}/man8
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
+%pre
+%groupadd -g 223 iscsi
+%useradd -u 223 -d /tmp -s /bin/false -c "iSCSI Daemon" -g iscsi iscsi
+
 %post
 if ! grep -q "^InitiatorName=[^ \t\n]" %{_sysconfdir}/initiatorname.iscsi 2>/dev/null ; then
-	echo "InitiatorName=$(hostname -f)" >> %{_sysconfdir}/initiatorname.iscsi
+	echo "InitiatorName=$(iscsi-iname)" >> %{_sysconfdir}/initiatorname.iscsi
 fi
-
 /sbin/chkconfig --add iscsi
-#%%service iscsi restart
 
 %preun
 if [ "$1" = "0" ]; then
@@ -77,11 +82,22 @@ if [ "$1" = "0" ]; then
 	/sbin/chkconfig --del iscsi
 fi
 
+%postun
+if [ "$1" = "0" ]; then
+	%userremove iscsi
+	%groupremove iscsi
+fi
+
 %files
 %defattr(644,root,root,755)
-%doc README THANKS
-%attr(755,root,root) %{_sbindir}/*
-%attr(750,root,root) %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/iscsid.conf
-%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/initiatorname.iscsi
-%attr(754,root,root) /etc/rc.d/init.d/iscsi
+%doc ChangeLog README THANKS
+%dir %{_sysconfdir}/iscsi
+%dir %{_sysconfdir}/iscsi/ifaces
+%dir %{_sysconfdir}/iscsi/nodes
+%dir %{_sysconfdir}/iscsi/send_targets
+%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/iscsi/iscsid.conf
+%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/iscsi/initiatorname.iscsi
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/sysconfig/iscsi
+%attr(754,root,root) /etc/rc.d/init.d/iscsi
+%attr(755,root,root) %{_sbindir}/*
+%{_mandir}/man8/*
