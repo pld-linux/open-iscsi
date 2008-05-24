@@ -1,18 +1,22 @@
-%define		_rc  865.15
-%define		_rel 2
+# TODO
+# - /sbin/iscsistart is linked static, should it be linked uclibc/klibc-static for initrd?
+#
+%define		subver	865.15
+%define		rel		2
 Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
 Version:	2.0
-Release:	0.%{_rc}.%{_rel}
+Release:	0.%{subver}.%{rel}
 License:	GPL
 Group:		Networking/Daemons
-Source0:	http://www.open-iscsi.org/bits/%{name}-%{version}-%{_rc}.tar.gz
+Source0:	http://www.open-iscsi.org/bits/%{name}-%{version}-%{subver}.tar.gz
 # Source0-md5:	2efff8c813ec84677a80c3e881942ffc
 Source1:	%{name}.init
 Source2:	%{name}.sysconfig
 URL:		http://www.open-iscsi.org/
 BuildRequires:	db-devel
+BuildRequires:	glibc-static
 BuildRequires:	rpmbuild(macros) >= 1.379
 Requires(post,preun):	/sbin/chkconfig
 Requires:	rc-scripts
@@ -39,7 +43,7 @@ informacji o protokole iSCSI znajduje się w standardach IETF na
 <http://www.ietf.org/>.
 
 %prep
-%setup -q -n %{name}-%{version}-%{_rc}
+%setup -q -n %{name}-%{version}-%{subver}
 
 %build
 for i in usr utils utils/fwparam_ibft; do
@@ -50,7 +54,7 @@ done
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT{%{_sbindir},%{_mandir}/man8,/etc/{iscsi/ifaces,iscsi/nodes,iscsi/send_targets,rc.d/init.d,sysconfig}}
+install -d $RPM_BUILD_ROOT{%{_sbindir},%{_mandir}/man8,%{_sysconfdir}/{iscsi/ifaces,iscsi/nodes,iscsi/send_targets},/etc/{rc.d/init.d,sysconfig}}
 
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsi
 install %{SOURCE2} $RPM_BUILD_ROOT/etc/sysconfig/iscsi
