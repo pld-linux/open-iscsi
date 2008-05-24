@@ -99,5 +99,9 @@ fi
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/iscsi/initiatorname.iscsi
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/sysconfig/iscsi
 %attr(754,root,root) /etc/rc.d/init.d/iscsi
-%attr(755,root,root) %{_sbindir}/*
+%attr(755,root,root) %{_sbindir}/fwparam_ibft
+%attr(755,root,root) %{_sbindir}/iscsi-iname
+%attr(755,root,root) %{_sbindir}/iscsiadm
+%attr(755,root,root) %{_sbindir}/iscsid
+%attr(755,root,root) %{_sbindir}/iscsistart
 %{_mandir}/man8/*
