@@ -1,0 +1,10 @@
+--- open-iscsi-2.0-865.15/usr/idbm.c_	2008-08-21 14:22:20.371513750 +0000
++++ open-iscsi-2.0-865.15/usr/idbm.c	2008-08-21 14:22:50.881420500 +0000
+@@ -31,6 +31,7 @@
+ #include <sys/stat.h>
+ #include <sys/file.h>
+ #include <sys/types.h>
++#include <limits.h>
+ 
+ #include "idbm.h"
+ #include "log.h"
