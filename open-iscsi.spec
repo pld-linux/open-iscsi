@@ -14,6 +14,7 @@ Source0:	http://www.open-iscsi.org/bits/%{name}-%{version}-%{subver}.tar.gz
 # Source0-md5:	2efff8c813ec84677a80c3e881942ffc
 Source1:	%{name}.init
 Source2:	%{name}.sysconfig
+Patch0:		%{name}-limitsh.patch
 URL:		http://www.open-iscsi.org/
 BuildRequires:	db-devel
 BuildRequires:	glibc-static
@@ -44,6 +45,7 @@ informacji o protokole iSCSI znajduje się w standardach IETF na
 
 %prep
 %setup -q -n %{name}-%{version}-%{subver}
+%patch0 -p1
 
 %build
 for i in usr utils utils/fwparam_ibft; do
