@@ -34,7 +34,7 @@ start() {
 		daemon iscsid -u iscsi -g iscsi
 		RETVAL=$?
 		if [ $RETVAL -eq 0 ]; then
-		       touch /var/lock/subsys/iscsid
+			touch /var/lock/subsys/iscsid
 			run_cmd "Logging into iSCSI targets" iscsiadm -m node -L automatic
 		fi
 	else
@@ -54,24 +54,40 @@ stop() {
 	fi
 }
 
+condrestart() {
+	if [ -f /var/lock/subsys/iscsid ]; then
+		stop
+		start
+	else
+		msg_not_running "iSCSI Initiator"
+		RETVAL=$1
+	fi
+}
+
 RETVAL=0
 case "$1" in
   start)
   	start
 	;;
   stop)
-  	stop
+	stop
 	;;
-  restart|force-reload)
+  restart)
 	stop
 	start
+	;;
+  try-restart)
+	condrestart 0
+	;;
+  force-reload)
+	condrestart 7
 	;;
   status)
 	status iscsid
 	exit $?
 	;;
   *)
-	msg_usage "$0 {start|stop|restart|force-reload|status}"
+	msg_usage "$0 {start|stop|restart|try-restart|force-reload|status}"
 	exit 3
 esac
 exit $RETVAL
