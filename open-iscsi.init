@@ -33,8 +33,10 @@ start() {
 		msg_starting "iSCSI Initiator"
 		daemon iscsid -u iscsi -g iscsi
 		RETVAL=$?
-		[ $RETVAL -eq 0 ] && touch /var/lock/subsys/iscsid
-		run_cmd "Logging into iSCSI targets" iscsiadm -m node -L automatic
+		if [ $RETVAL -eq 0 ]; then
+		       touch /var/lock/subsys/iscsid
+			run_cmd "Logging into iSCSI targets" iscsiadm -m node -L automatic
+		fi
 	else
 		msg_already_running "iSCSI Initiator"
 	fi
