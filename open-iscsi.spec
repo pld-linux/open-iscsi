@@ -1,8 +1,8 @@
 # TODO
 # - /sbin/iscsistart is linked static, should it be linked uclibc/klibc-static for initrd?
 #
-%define		subver	865.15
-%define		rel		2
+%define		subver	870.2
+%define		rel		1
 Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
@@ -11,10 +11,9 @@ Release:	0.%{subver}.%{rel}
 License:	GPL
 Group:		Networking/Daemons
 Source0:	http://www.open-iscsi.org/bits/%{name}-%{version}-%{subver}.tar.gz
-# Source0-md5:	2efff8c813ec84677a80c3e881942ffc
+# Source0-md5:	d7d26fba248fd8e621091e167b581dfb
 Source1:	%{name}.init
 Source2:	%{name}.sysconfig
-Patch0:		%{name}-limitsh.patch
 URL:		http://www.open-iscsi.org/
 BuildRequires:	db-devel
 BuildRequires:	glibc-static
@@ -45,13 +44,12 @@ informacji o protokole iSCSI znajduje się w standardach IETF na
 
 %prep
 %setup -q -n %{name}-%{version}-%{subver}
-%patch0 -p1
 
 %build
-for i in usr utils utils/fwparam_ibft; do
+for i in utils/fwparam_ibft usr utils; do
 	%{__make} -C $i \
 		CC="%{__cc}" \
-		CFLAGS="%{rpmcflags} -I../include -DLinux -DNETLINK_ISCSI=12 -D_GNU_SOURCE"
+		CFLAGS="%{rpmcflags} -I../include -I../../include -DLinux -DNETLINK_ISCSI=12 -D_GNU_SOURCE"
 done
 
 %install
@@ -65,7 +63,6 @@ install etc/iscsid.conf $RPM_BUILD_ROOT%{_sysconfdir}/iscsi
 :> $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/initiatorname.iscsi
 
 install usr/{iscsid,iscsiadm,iscsistart} utils/iscsi-iname $RPM_BUILD_ROOT%{_sbindir}
-install utils/fwparam_ibft/fwparam_ibft $RPM_BUILD_ROOT%{_sbindir}
 
 install doc/*.8 $RPM_BUILD_ROOT/%{_mandir}/man8
 
@@ -96,7 +93,7 @@ fi
 
 %files
 %defattr(644,root,root,755)
-%doc ChangeLog README THANKS
+%doc Changelog README THANKS
 %dir %{_sysconfdir}/iscsi
 %dir %{_sysconfdir}/iscsi/ifaces
 %dir %{_sysconfdir}/iscsi/nodes
@@ -105,7 +102,6 @@ fi
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/iscsi/initiatorname.iscsi
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/sysconfig/iscsi
 %attr(754,root,root) /etc/rc.d/init.d/iscsi
-%attr(755,root,root) %{_sbindir}/fwparam_ibft
 %attr(755,root,root) %{_sbindir}/iscsi-iname
 %attr(755,root,root) %{_sbindir}/iscsiadm
 %attr(755,root,root) %{_sbindir}/iscsid
