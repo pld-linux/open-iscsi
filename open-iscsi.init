@@ -31,7 +31,7 @@ start() {
 	# Start daemons.
 	if [ ! -f /var/lock/subsys/iscsid ]; then
 		msg_starting "iSCSI Initiator"
-		daemon iscsid -u iscsi -g iscsi
+		daemon /sbin/iscsid -u iscsi -g iscsi
 		RETVAL=$?
 		if [ $RETVAL -eq 0 ]; then
 			touch /var/lock/subsys/iscsid
