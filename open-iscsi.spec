@@ -2,7 +2,7 @@
 # - /sbin/iscsistart is linked static, should it be linked uclibc/klibc-static for initrd?
 #
 %define		subver	870.2
-%define		rel		2
+%define		rel		3
 Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
@@ -62,7 +62,8 @@ install %{SOURCE2} $RPM_BUILD_ROOT/etc/sysconfig/iscsi
 install etc/iscsid.conf $RPM_BUILD_ROOT%{_sysconfdir}/iscsi
 :> $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/initiatorname.iscsi
 
-install usr/{iscsid,iscsiadm,iscsistart} utils/iscsi-iname $RPM_BUILD_ROOT%{_sbindir}
+install usr/{iscsid,iscsiadm,iscsistart} $RPM_BUILD_ROOT%{_sbindir}
+install utils/iscsi{-iname,_discovery} $RPM_BUILD_ROOT%{_sbindir}
 
 install doc/*.8 $RPM_BUILD_ROOT%{_mandir}/man8
 
@@ -106,4 +107,5 @@ fi
 %attr(755,root,root) %{_sbindir}/iscsiadm
 %attr(755,root,root) %{_sbindir}/iscsid
 %attr(755,root,root) %{_sbindir}/iscsistart
+%attr(755,root,root) %{_sbindir}/iscsi_discovery
 %{_mandir}/man8/*
