@@ -1,8 +1,8 @@
 # TODO
 # - /sbin/iscsistart is linked static, should it be linked uclibc/klibc-static for initrd?
 #
-%define		subver	870.2
-%define		rel		3
+%define		subver	871
+%define		rel		1
 Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
@@ -11,7 +11,7 @@ Release:	0.%{subver}.%{rel}
 License:	GPL
 Group:		Networking/Daemons
 Source0:	http://www.open-iscsi.org/bits/%{name}-%{version}-%{subver}.tar.gz
-# Source0-md5:	d7d26fba248fd8e621091e167b581dfb
+# Source0-md5:	0c403e8c9ad41607571ba0e6e8ff196e
 Source1:	%{name}.init
 Source2:	%{name}.sysconfig
 URL:		http://www.open-iscsi.org/
@@ -49,7 +49,7 @@ informacji o protokole iSCSI znajduje się w standardach IETF na
 for i in utils/fwparam_ibft usr utils; do
 	%{__make} -C $i \
 		CC="%{__cc}" \
-		CFLAGS="%{rpmcflags} -I../include -I../../include -DLinux -DNETLINK_ISCSI=12 -D_GNU_SOURCE"
+		CFLAGS="%{rpmcflags} -I../{include,usr} -I../../{include,usr} -DLinux -DNETLINK_ISCSI=12 -D_GNU_SOURCE"
 done
 
 %install
