@@ -1,8 +1,8 @@
 # TODO
 # - /sbin/iscsistart is linked static, should it be linked uclibc/klibc-static for initrd?
 #
-%define		subver	871
-%define		rel		1
+%define		subver	871.3
+%define		rel		0.1
 Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
@@ -10,8 +10,8 @@ Version:	2.0
 Release:	0.%{subver}.%{rel}
 License:	GPL
 Group:		Networking/Daemons
-Source0:	http://www.open-iscsi.org/bits/%{name}-%{version}-%{subver}.tar.gz
-# Source0-md5:	0c403e8c9ad41607571ba0e6e8ff196e
+Source0:	http://kernel.org/pub/linux/kernel/people/mnc/open-iscsi/releases/%{name}-%{version}-%{subver}.tar.gz
+# Source0-md5:	16474cb7cd5a41aea1b7b0b631ac996d
 Source1:	%{name}.init
 Source2:	%{name}.sysconfig
 URL:		http://www.open-iscsi.org/
