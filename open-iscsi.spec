@@ -1,7 +1,7 @@
 # TODO
 # - /sbin/iscsistart is linked static, should it be linked uclibc/klibc-static for initrd?
 #
-%define		subver	871.3
+%define		subver	872
 %define		rel		1
 Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
@@ -11,13 +11,15 @@ Release:	0.%{subver}.%{rel}
 License:	GPL
 Group:		Networking/Daemons
 Source0:	http://kernel.org/pub/linux/kernel/people/mnc/open-iscsi/releases/%{name}-%{version}-%{subver}.tar.gz
-# Source0-md5:	16474cb7cd5a41aea1b7b0b631ac996d
+# Source0-md5:	b4df94f08c241352bb964043b3e44779
 Source1:	%{name}.init
 Source2:	%{name}.sysconfig
-Patch0:		stat.patch
+Patch0:		%{name}-build.patch
 URL:		http://www.open-iscsi.org/
 BuildRequires:	db-devel
 BuildRequires:	glibc-static
+BuildRequires:	openslp-static
+BuildRequires:	openssl-static
 BuildRequires:	rpmbuild(macros) >= 1.379
 Requires(post,preun):	/sbin/chkconfig
 Requires:	rc-scripts
@@ -48,10 +50,17 @@ informacji o protokole iSCSI znajduje się w standardach IETF na
 %patch0 -p1
 
 %build
+cd utils/open-isns
+%configure \
+	--with-slp \
+	--with-security
+%{__make}
+cd ../..
 for i in utils/sysdeps utils/fwparam_ibft usr utils; do
 	%{__make} -C $i \
 		CC="%{__cc}" \
-		CFLAGS="%{rpmcflags} -I../include -I../usr -I../../include -I../../usr -DLinux -DNETLINK_ISCSI=12 -D_GNU_SOURCE"
+		OPTFLAGS="%{rpmcflags} %{rpmcppflags}" \
+		KSRC="%{_kernelsrcdir}"
 done
 
 %install
