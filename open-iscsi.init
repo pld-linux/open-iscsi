@@ -31,6 +31,7 @@ start() {
 	# Start daemons.
 	if [ ! -f /var/lock/subsys/iscsid ]; then
 		msg_starting "iSCSI Initiator"
+		modprobe -s scsi_transport_iscsi
 		daemon /sbin/iscsid -u iscsi -g iscsi
 		RETVAL=$?
 		if [ $RETVAL -eq 0 ]; then
