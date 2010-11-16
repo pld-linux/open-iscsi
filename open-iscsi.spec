@@ -86,8 +86,8 @@ rm -rf $RPM_BUILD_ROOT
 %useradd -u 223 -d /tmp -s /bin/false -c "iSCSI Daemon" -g iscsi iscsi
 
 %post
-if ! grep -q "^InitiatorName=[^ \t\n]" %{_sysconfdir}/initiatorname.iscsi 2>/dev/null; then
-	echo "InitiatorName=$(iscsi-iname)" >> %{_sysconfdir}/initiatorname.iscsi
+if ! grep -q "^InitiatorName=[^ \t\n]" %{_sysconfdir}/iscsi/initiatorname.iscsi 2>/dev/null; then
+	echo "InitiatorName=$(iscsi-iname)" >> %{_sysconfdir}/iscsi/initiatorname.iscsi
 fi
 /sbin/chkconfig --add iscsi
 
