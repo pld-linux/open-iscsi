@@ -2,7 +2,7 @@
 # - /sbin/iscsistart is linked static, should it be linked uclibc/klibc-static for initrd?
 #
 %define		subver	872
-%define		rel		1
+%define		rel		2
 Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
