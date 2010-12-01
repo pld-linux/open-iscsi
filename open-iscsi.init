@@ -2,7 +2,7 @@
 #
 # iscsi		This shell script takes care of starting and stopping iscsi.
 #
-# chkconfig:	2345 11 20
+# chkconfig:	2345 7 89
 # description:	Start iSCSI to allow access to remote SCSI devices
 #
 
