@@ -86,7 +86,7 @@ stop() {
 			iscsiadm -k 0 2>/dev/null
 		fi
 
-		msg_stopping "iSCSI Initiator"
+		msg_stopping "iSCSI Initiator"; busy
 		if [ -n "$(iscsiadm -m session 2>/dev/null | egrep "tcp|iser|bnx2i|cxgb3i|be2iscsi")" ]; then
 			deltext; fail
 			nls "Not stopping iSCSI Initiator: iscsi sessions still active"
@@ -105,6 +105,8 @@ stop() {
 
 		modprobe -r ib_iser 2>/dev/null
 		modprobe -r iscsi_tcp 2>/dev/null
+
+		deltext; ok
 
 		rm -f /var/lock/subsys/iscsid >/dev/null 2>&1
 	else
