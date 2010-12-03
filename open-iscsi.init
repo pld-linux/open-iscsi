@@ -5,7 +5,6 @@
 # chkconfig:	2345 7 89
 # description:	Start iSCSI to allow access to remote SCSI devices
 #
-
 # Source function library.
 . /etc/rc.d/init.d/functions
 
@@ -27,17 +26,53 @@ else
 	exit 0
 fi
 
+# FIXME this has a false positive for root on nfs
+root_is_iscsi() {
+	rootopts=$(awk '{ if ($1 !~ /^[ \t]*#/ && $2 == "/") { print $4; }}' /etc/mtab)
+	echo $rootopts | grep -q _netdev && return 0 || return 1
+}
+
+force_start() {
+	msg_starting "iSCSI Initiator"
+	modprobe -s iscsi_tcp
+	modprobe -s ib_iser
+	modprobe -s cxgb3i
+	modprobe -s bnx2i
+	modprobe -s be2iscsi
+	daemon /sbin/iscsid -u iscsi -g iscsi
+	RETVAL=$?
+	if [ $RETVAL -eq 0 ]; then
+		touch /var/lock/subsys/iscsid
+	fi
+	return $RETVAL
+}
+
+use_discoveryd() {
+    grep -qrs "discovery.sendtargets.use_discoveryd = Yes" /etc/iscsi/send_targets
+    if [ $? -eq 0 ] ; then
+        return 0
+    fi
+
+    grep -qrs "discovery.isns.use_discoveryd = Yes" /etc/iscsi/isns
+    if [ $? -eq 0 ] ; then
+        return 0
+    fi
+
+    return 1
+}
+
 start() {
 	# Start daemons.
 	if [ ! -f /var/lock/subsys/iscsid ]; then
-		msg_starting "iSCSI Initiator"
-		modprobe -s scsi_transport_iscsi
-		modprobe -s iscsi_tcp
-		daemon /sbin/iscsid -u iscsi -g iscsi
-		RETVAL=$?
-		if [ $RETVAL -eq 0 ]; then
-			touch /var/lock/subsys/iscsid
-			run_cmd "Logging into iSCSI targets" iscsiadm -m node -L automatic
+
+		# only start if nodes are setup to startup automatically, root is iscsi,
+		# or if iscsid is managing the sessions.
+		grep -qrs "node.startup = automatic" /etc/iscsi/nodes
+		if [ $? -eq 0 ] || root_is_iscsi || use_discoveryd ; then
+			force_start
+			RETVAL=$?
+		else
+			RETVAL=0
 		fi
 	else
 		msg_already_running "iSCSI Initiator"
@@ -47,9 +82,30 @@ start() {
 stop() {
 	# Stop daemons.
 	if [ -f /var/lock/subsys/iscsid ]; then
-		run_cmd "Logging out from iSCSI targets" iscsiadm -m node -U all
+		if use_discoveryd ; then
+			iscsiadm -k 0 2>/dev/null
+		fi
+
 		msg_stopping "iSCSI Initiator"
-		killproc iscsid
+		if [ -n "$(iscsiadm -m session 2>/dev/null | egrep "tcp|iser|bnx2i|cxgb3i|be2iscsi")" ]; then
+			deltext; fail
+			nls "Not stopping iSCSI Initiator: iscsi sessions still active"
+			return 0
+		fi
+		
+		iscsiadm -k 0 2>/dev/null
+
+		# only remove the iscsi drivers when offload is used
+		rmmod bnx2i 2>/dev/null
+		rmmod cnic 2>/dev/null
+
+		rmmod cxgb3i 2>/dev/null
+
+		modprobe -r be2iscsi 2>/dev/null
+
+		modprobe -r ib_iser 2>/dev/null
+		modprobe -r iscsi_tcp 2>/dev/null
+
 		rm -f /var/lock/subsys/iscsid >/dev/null 2>&1
 	else
 		msg_not_running "iSCSI Initiator"

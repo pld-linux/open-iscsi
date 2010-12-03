@@ -2,7 +2,7 @@
 # - /sbin/iscsistart is linked static, should it be linked uclibc/klibc-static for initrd?
 #
 %define		subver	872
-%define		rel		2
+%define		rel		3
 Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
@@ -14,6 +14,7 @@ Source0:	http://kernel.org/pub/linux/kernel/people/mnc/open-iscsi/releases/%{nam
 # Source0-md5:	b4df94f08c241352bb964043b3e44779
 Source1:	%{name}.init
 Source2:	%{name}.sysconfig
+Source3:	%{name}-devices.init
 Patch0:		%{name}-build.patch
 URL:		http://www.open-iscsi.org/
 BuildRequires:	db-devel
@@ -23,6 +24,7 @@ BuildRequires:	openssl-static
 BuildRequires:	rpmbuild(macros) >= 1.379
 Requires(post,preun):	/sbin/chkconfig
 Requires:	rc-scripts
+Suggests:	multipath-tools
 Provides:	group(iscsi)
 Provides:	user(iscsi)
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -69,6 +71,7 @@ install -d $RPM_BUILD_ROOT{%{_sbindir},%{_mandir}/man8,%{_sysconfdir}/{iscsi/ifa
 
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsi
 install %{SOURCE2} $RPM_BUILD_ROOT/etc/sysconfig/iscsi
+install %{SOURCE3} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsi-devices
 
 install etc/iscsid.conf $RPM_BUILD_ROOT%{_sysconfdir}/iscsi
 :> $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/initiatorname.iscsi
@@ -90,10 +93,13 @@ if ! grep -q "^InitiatorName=[^ \t\n]" %{_sysconfdir}/iscsi/initiatorname.iscsi 
 	echo "InitiatorName=$(iscsi-iname)" >> %{_sysconfdir}/iscsi/initiatorname.iscsi
 fi
 /sbin/chkconfig --add iscsi
+/sbin/chkconfig --add iscsi-devices
 
 %preun
 if [ "$1" = "0" ]; then
+	%service iscsi-devices stop
 	%service iscsi stop
+	/sbin/chkconfig --del iscsi-devices
 	/sbin/chkconfig --del iscsi
 fi
 
