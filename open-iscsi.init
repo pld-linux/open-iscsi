@@ -95,7 +95,7 @@ stop() {
 
 		deltext; ok
 
-		rm -f /var/lock/subsys/iscsid >/dev/null 2>&1
+		rm -f /var/lock/subsys/iscsid /var/run/iscsid.pid >/dev/null 2>&1
 	else
 		msg_not_running "iSCSI Initiator"
 	fi
