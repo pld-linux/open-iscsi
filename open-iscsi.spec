@@ -1,5 +1,9 @@
 # TODO
 # - /sbin/iscsistart is linked static, should it be linked uclibc/klibc-static for initrd?
+# - for use in /sbin only openslp should be static (or libslp moved to /lib)
+#
+# Conditional build:
+%bcond_with	dynamic	# link utilities dynamically
 #
 %define		subver	872
 %define		rel		3
@@ -8,7 +12,7 @@ Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
 Version:	2.0
 Release:	0.%{subver}.%{rel}
-License:	GPL
+License:	GPL v2
 Group:		Networking/Daemons
 Source0:	http://kernel.org/pub/linux/kernel/people/mnc/open-iscsi/releases/%{name}-%{version}-%{subver}.tar.gz
 # Source0-md5:	b4df94f08c241352bb964043b3e44779
@@ -17,11 +21,15 @@ Source2:	%{name}.sysconfig
 Source3:	%{name}-devices.init
 Patch0:		%{name}-build.patch
 URL:		http://www.open-iscsi.org/
-BuildRequires:	db-devel
+BuildRequires:	openssl-devel
+BuildRequires:	rpmbuild(macros) >= 1.379
+%if %{with dynamic}
+BuildRequires:	openslp-devel
+BuildRequires:	sed >= 4.0
+%else
 BuildRequires:	glibc-static
 BuildRequires:	openslp-static
-BuildRequires:	openssl-static
-BuildRequires:	rpmbuild(macros) >= 1.379
+%endif
 Requires(post,preun):	/sbin/chkconfig
 Requires:	rc-scripts
 Suggests:	multipath-tools
@@ -51,6 +59,10 @@ informacji o protokole iSCSI znajduje się w standardach IETF na
 %setup -q -n %{name}-%{version}-%{subver}
 %patch0 -p1
 
+%if %{with dynamic}
+sed -i -e 's/-static //' usr/Makefile
+%endif
+
 %build
 cd utils/open-isns
 %configure \
@@ -62,7 +74,9 @@ for i in utils/sysdeps utils/fwparam_ibft usr utils; do
 	%{__make} -C $i \
 		CC="%{__cc}" \
 		OPTFLAGS="%{rpmcflags} %{rpmcppflags}" \
-		KSRC="%{_kernelsrcdir}"
+		IPC_FLAGS="-DNETLINK_ISCSI=8 -D_GNU_SOURCE" \
+		KSUBLEVEL=0 \
+		KSRC=/usr
 done
 
 %install
@@ -126,4 +140,8 @@ fi
 %attr(755,root,root) %{_sbindir}/iscsid
 %attr(755,root,root) %{_sbindir}/iscsistart
 %attr(755,root,root) %{_sbindir}/iscsi_discovery
-%{_mandir}/man8/*
+%{_mandir}/man8/iscsi-iname.8*
+%{_mandir}/man8/iscsi_discovery.8*
+%{_mandir}/man8/iscsiadm.8*
+%{_mandir}/man8/iscsid.8*
+%{_mandir}/man8/iscsistart.8*
