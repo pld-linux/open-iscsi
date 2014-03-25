@@ -3,19 +3,19 @@
 # - for use in /sbin only openslp should be static (or libslp moved to /lib)
 #
 # Conditional build:
-%bcond_with	dynamic	# link utilities dynamically
+%bcond_with	dynamic		# link utilities dynamically
 #
-%define		subver	872
-%define		rel		3
+%define		ver	2.0
+%define		subver	873
 Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
-Version:	2.0
-Release:	0.%{subver}.%{rel}
+Version:	%{ver}.%{subver}
+Release:	1
 License:	GPL v2
 Group:		Networking/Daemons
-Source0:	http://kernel.org/pub/linux/kernel/people/mnc/open-iscsi/releases/%{name}-%{version}-%{subver}.tar.gz
-# Source0-md5:	b4df94f08c241352bb964043b3e44779
+Source0:	http://www.open-iscsi.org/bits/%{name}-%{ver}-%{subver}.tar.gz
+# Source0-md5:	8b8316d7c9469149a6cc6234478347f7
 Source1:	%{name}.init
 Source2:	%{name}.sysconfig
 Source3:	%{name}-devices.init
@@ -56,7 +56,7 @@ informacji o protokole iSCSI znajduje się w standardach IETF na
 <http://www.ietf.org/>.
 
 %prep
-%setup -q -n %{name}-%{version}-%{subver}
+%setup -q -n %{name}-%{ver}-%{subver}
 %patch0 -p1
 
 %if %{with dynamic}
@@ -67,7 +67,7 @@ sed -i -e 's/-static //' usr/Makefile
 cd utils/open-isns
 %configure \
 	--with-slp \
-	--with-security
+	--without-security
 %{__make}
 cd ../..
 for i in utils/sysdeps utils/fwparam_ibft usr utils; do
