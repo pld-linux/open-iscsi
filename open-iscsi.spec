@@ -18,6 +18,21 @@ Source3:	%{name}-devices.init
 Source4:	iscsiuio.logrotate
 Patch0:		%{name}-build.patch
 Patch1:		%{name}-git.patch
+Patch31:	0043-idmb_rec_write-check-for-tpgt-first.patch
+Patch32:	0044-iscsid-add-initrd-option-to-set-run-from-initrd-hint.patch
+Patch33:	0045-idbm_rec_write-seperate-old-and-new-style-writes.patch
+Patch34:	0046-idbw_rec_write-pick-tpgt-from-existing-record.patch
+Patch35:	0047-iscsiadm-iscsid-newroot-command-to-survive-switch_ro.patch
+Patch36:	0047-iscsiuio-systemd-socket-activation-support.patch
+Patch37:	0048-iscsiadm-param-parsing-for-advanced-node-creation.patch
+Patch38:	0049-update-systemd-service-files-add-iscsi.service-for-s.patch
+Patch39:	0050-iscsi-boot-related-service-file-updates.patch
+Patch40:	0058-iscsiuio-IPC-newroot-command.patch
+Patch41:	0059-iscsiuio-systemd-unit-files.patch
+Patch42:	0062-Don-t-check-for-autostart-sessions-if-iscsi-is-not-u.patch
+Patch43:	0063-fix-order-of-setting-uid-gid-and-drop-supplementary-.patch
+Patch44:	0065-fix-hardened-build-of-iscsiuio.patch
+Patch45:	0066-start-socket-listeners-on-iscsiadm-command.patch
 URL:		http://www.open-iscsi.org/
 BuildRequires:	kmod-devel
 BuildRequires:	openssl-devel
@@ -59,6 +74,21 @@ informacji o protokole iSCSI znajduje się w standardach IETF na
 %setup -q -n %{name}-%{ver}-%{subver}
 %patch0 -p1
 %patch1 -p1
+%patch31 -p1
+%patch32 -p1
+%patch33 -p1
+%patch34 -p1
+%patch35 -p1
+%patch36 -p1
+%patch37 -p1
+%patch38 -p1
+%patch39 -p1
+%patch40 -p1
+%patch41 -p1
+%patch42 -p1
+%patch43 -p1
+%patch44 -p1
+%patch45 -p1
 
 %if %{with dynamic}
 sed -i -e 's/-static //' usr/Makefile
@@ -105,8 +135,13 @@ install usr/iscsistart $RPM_BUILD_ROOT%{_sbindir}
 install doc/iscsistart.8 $RPM_BUILD_ROOT%{_mandir}/man8
 install doc/iscsi-iname.8 $RPM_BUILD_ROOT%{_mandir}/man8
 
+install etc/systemd/iscsi.service $RPM_BUILD_ROOT%{systemdunitdir}
 install etc/systemd/iscsid.service $RPM_BUILD_ROOT%{systemdunitdir}
 install etc/systemd/iscsid.socket $RPM_BUILD_ROOT%{systemdunitdir}
+install etc/systemd/iscsiuio.service $RPM_BUILD_ROOT%{systemdunitdir}
+install etc/systemd/iscsiuio.socket $RPM_BUILD_ROOT%{systemdunitdir}
+
+install etc/systemd/iscsi-mark-root-nodes $RPM_BUILD_ROOT/lib/systemd/pld-helpers.d
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -152,8 +187,12 @@ fi
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/logrotate.d/iscsiuio
 %attr(754,root,root) /etc/rc.d/init.d/iscsi
 %attr(754,root,root) /etc/rc.d/init.d/iscsi-devices
+%{systemdunitdir}/iscsi.service
 %{systemdunitdir}/iscsid.service
 %{systemdunitdir}/iscsid.socket
+%{systemdunitdir}/iscsiuio.service
+%{systemdunitdir}/iscsiuio.socket
+%attr(755,root,root) /lib/systemd/pld-helpers.d/iscsi-mark-root-nodes
 %attr(755,root,root) %{_sbindir}/iscsi-iname
 %attr(755,root,root) %{_sbindir}/iscsiadm
 %attr(755,root,root) %{_sbindir}/iscsid
