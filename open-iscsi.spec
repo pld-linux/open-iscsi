@@ -126,9 +126,9 @@ install -d $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/{nodes,send_targets,static,isns,s
 
 :> $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/initiatorname.iscsi
 
-install %{SOURCE1} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsi
+install %{SOURCE1} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsid
 install %{SOURCE2} $RPM_BUILD_ROOT/etc/sysconfig/iscsi
-install %{SOURCE3} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsi-devices
+install %{SOURCE3} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsi
 install %{SOURCE4} $RPM_BUILD_ROOT/etc/logrotate.d/iscsiuio
 
 install usr/iscsistart $RPM_BUILD_ROOT%{_sbindir}
@@ -155,13 +155,13 @@ if ! grep -q "^InitiatorName=[^ \t\n]" %{_sysconfdir}/iscsi/initiatorname.iscsi 
 	echo "InitiatorName=$(iscsi-iname)" >> %{_sysconfdir}/iscsi/initiatorname.iscsi
 fi
 /sbin/chkconfig --add iscsi
-/sbin/chkconfig --add iscsi-devices
+/sbin/chkconfig --add iscsid
 
 %preun
 if [ "$1" = "0" ]; then
-	%service iscsi-devices stop
+	%service iscsid stop
 	%service iscsi stop
-	/sbin/chkconfig --del iscsi-devices
+	/sbin/chkconfig --del iscsid
 	/sbin/chkconfig --del iscsi
 fi
 
@@ -186,7 +186,7 @@ fi
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/sysconfig/iscsi
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/logrotate.d/iscsiuio
 %attr(754,root,root) /etc/rc.d/init.d/iscsi
-%attr(754,root,root) /etc/rc.d/init.d/iscsi-devices
+%attr(754,root,root) /etc/rc.d/init.d/iscsid
 %{systemdunitdir}/iscsi.service
 %{systemdunitdir}/iscsid.service
 %{systemdunitdir}/iscsid.socket
