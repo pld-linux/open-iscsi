@@ -19,19 +19,20 @@ new file mode 100644
 index 0000000..157be62
 --- /dev/null
 +++ b/etc/systemd/iscsi-mark-root-nodes
-@@ -0,0 +1,12 @@
-+#!/bin/sh
+@@ -0,0 +1,13 @@
++#!/bin/bash
 +
 +ISCSIADM=/sbin/iscsiadm
 +
 +$ISCSIADM -m session >/dev/null 2>&1 || exit 0
 +
 +$ISCSIADM -m session | while read t num i target; do
-+	ip=${i%:*}
-+	$ISCSIADM -m node -p $ip -T $target -o update -n node.startup -v onboot
++  ip=${i%:*}
++  $ISCSIADM -m node -p $ip -T $target -o update -n node.startup -v onboot
 +done
 +
 +systemctl start iscsid.service
++
 diff --git a/etc/systemd/iscsi.service b/etc/systemd/iscsi.service
 index 7b4efee..d5712bd 100644
 --- a/etc/systemd/iscsi.service
@@ -41,7 +42,7 @@ index 7b4efee..d5712bd 100644
  Type=oneshot
  RemainAfterExit=true
 -ExecStart=/usr/libexec/iscsi_mark_root_nodes
-+ExecStart=/lib/systemd/pld-helpers.d/iscsi-mark-root-nodes
++ExecStart=/usr/libexec/iscsi-mark-root-nodes
  ExecStart=/sbin/iscsiadm -m node --loginall=automatic
  ExecStop=/bin/sync
  ExecStop=/sbin/iscsiadm -m node --logoutall=automatic

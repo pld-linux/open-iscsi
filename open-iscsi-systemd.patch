@@ -1,0 +1,42 @@
+--- open-iscsi-2.0-873/etc/systemd/iscsi-mark-root-nodes~	2014-04-01 12:17:50.000000000 +0200
++++ open-iscsi-2.0-873/etc/systemd/iscsi-mark-root-nodes	2014-04-01 12:19:04.118355255 +0200
+@@ -1,13 +1,12 @@
+-#!/bin/bash
++#!/bin/sh
+ 
+ ISCSIADM=/sbin/iscsiadm
+ 
+ $ISCSIADM -m session >/dev/null 2>&1 || exit 0
+ 
+ $ISCSIADM -m session | while read t num i target; do
+-  ip=${i%:*}
+-  $ISCSIADM -m node -p $ip -T $target -o update -n node.startup -v onboot
++	ip=${i%:*}
++	$ISCSIADM -m node -p $ip -T $target -o update -n node.startup -v onboot
+ done
+ 
+-systemctl start iscsid.service
+-
++/bin/systemctl start iscsid.service
+--- open-iscsi-2.0-873/etc/systemd/iscsi.service~	2014-04-01 12:17:50.000000000 +0200
++++ open-iscsi-2.0-873/etc/systemd/iscsi.service	2014-04-01 12:19:26.975255123 +0200
+@@ -10,7 +10,7 @@
+ [Service]
+ Type=oneshot
+ RemainAfterExit=true
+-ExecStart=/usr/libexec/iscsi-mark-root-nodes
++ExecStart=/lib/systemd/pld-helpers.d/iscsi-mark-root-nodes
+ ExecStart=/sbin/iscsiadm -m node --loginall=automatic
+ ExecStop=/bin/sync
+ ExecStop=/sbin/iscsiadm -m node --logoutall=automatic
+--- open-iscsi-2.0-873/etc/systemd/iscsid.service~	2014-04-01 12:17:50.000000000 +0200
++++ open-iscsi-2.0-873/etc/systemd/iscsid.service	2014-04-01 12:20:05.375647813 +0200
+@@ -9,7 +9,7 @@
+ [Service]
+ Type=forking
+ PIDFile=/var/run/iscsid.pid
+-ExecStart=/usr/sbin/iscsid
++ExecStart=/usr/sbin/iscsid -u iscsi -g iscsi
+ ExecStop=/sbin/iscsiadm -k 0 2
+ 
+ [Install]

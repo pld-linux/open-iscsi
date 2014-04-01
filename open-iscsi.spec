@@ -16,8 +16,9 @@ Source1:	%{name}.init
 Source2:	%{name}.sysconfig
 Source3:	%{name}-devices.init
 Source4:	iscsiuio.logrotate
-Patch0:		%{name}-build.patch
-Patch1:		%{name}-git.patch
+Patch0:		%{name}-git.patch
+Patch1:		%{name}-build.patch
+Patch2:		%{name}-systemd.patch
 Patch31:	0043-idmb_rec_write-check-for-tpgt-first.patch
 Patch32:	0044-iscsid-add-initrd-option-to-set-run-from-initrd-hint.patch
 Patch33:	0045-idbm_rec_write-seperate-old-and-new-style-writes.patch
@@ -75,7 +76,6 @@ informacji o protokole iSCSI znajduje się w standardach IETF na
 %prep
 %setup -q -n %{name}-%{ver}-%{subver}
 %patch0 -p1
-%patch1 -p1
 %patch31 -p1
 %patch32 -p1
 %patch33 -p1
@@ -91,6 +91,8 @@ informacji o protokole iSCSI znajduje się w standardach IETF na
 %patch43 -p1
 %patch44 -p1
 %patch45 -p1
+%patch1 -p1
+%patch2 -p1
 
 %if %{with dynamic}
 sed -i -e 's/-static //' usr/Makefile
