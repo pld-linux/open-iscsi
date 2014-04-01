@@ -1,0 +1,8 @@
+/var/log/iscsiuio.log {
+	missingok
+	notifempty
+	sharedscripts
+	postrotate
+		/bin/killall -USR1 iscsiuio >/dev/null || :
+	endscript
+}

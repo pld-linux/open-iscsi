@@ -1,9 +1,5 @@
-# TODO
-# - /sbin/iscsistart is linked static, should it be linked uclibc/klibc-static for initrd?
-# - for use in /sbin only openslp should be static (or libslp moved to /lib)
-#
 # Conditional build:
-%bcond_with	dynamic		# link utilities dynamically
+%bcond_without	dynamic		# link utilities dynamically
 #
 %define		ver	2.0
 %define		subver	873
@@ -19,13 +15,17 @@ Source0:	http://www.open-iscsi.org/bits/%{name}-%{ver}-%{subver}.tar.gz
 Source1:	%{name}.init
 Source2:	%{name}.sysconfig
 Source3:	%{name}-devices.init
+Source4:	iscsiuio.logrotate
 Patch0:		%{name}-build.patch
+Patch1:		%{name}-git.patch
 URL:		http://www.open-iscsi.org/
+BuildRequires:	kmod-devel
 BuildRequires:	openssl-devel
 BuildRequires:	rpmbuild(macros) >= 1.379
 %if %{with dynamic}
 BuildRequires:	openslp-devel
 BuildRequires:	sed >= 4.0
+Requires:	openslp >= 2.0.0
 %else
 BuildRequires:	glibc-static
 BuildRequires:	openslp-static
@@ -58,42 +58,55 @@ informacji o protokole iSCSI znajduje się w standardach IETF na
 %prep
 %setup -q -n %{name}-%{ver}-%{subver}
 %patch0 -p1
+%patch1 -p1
 
 %if %{with dynamic}
 sed -i -e 's/-static //' usr/Makefile
 %endif
 
 %build
-cd utils/open-isns
+cd iscsiuio
+%{__libtoolize}
+%{__aclocal}
+%{__autoconf}
+%{__autoheader}
+%{__automake}
+%configure
+
+cd ../utils/open-isns
 %configure \
 	--with-slp \
 	--without-security
-%{__make}
 cd ../..
-for i in utils/sysdeps utils/fwparam_ibft usr utils; do
-	%{__make} -C $i \
-		CC="%{__cc}" \
-		OPTFLAGS="%{rpmcflags} %{rpmcppflags}" \
-		IPC_FLAGS="-DNETLINK_ISCSI=8 -D_GNU_SOURCE" \
-		KSUBLEVEL=0 \
-		KSRC=/usr
-done
+%{__make} \
+	CC="%{__cc}" \
+	OPTFLAGS="%{rpmcflags} %{rpmcppflags} -DUSE_KMOD -lkmod" \
+	IPC_FLAGS="-DNETLINK_ISCSI=8 -D_GNU_SOURCE" \
+	KSUBLEVEL=0
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT{%{_sbindir},%{_mandir}/man8,%{_sysconfdir}/{iscsi/ifaces,iscsi/nodes,iscsi/send_targets},/etc/{rc.d/init.d,sysconfig}}
+install -d $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/{nodes,send_targets,static,isns,slp,ifaces} \
+	$RPM_BUILD_ROOT/etc/{rc.d/init.d,sysconfig,logrotate.d} \
+	$RPM_BUILD_ROOT%{systemdunitdir} \
+	$RPM_BUILD_ROOT/lib/systemd/pld-helpers.d
+
+%{__make} install_programs install_doc install_etc \
+	DESTDIR=$RPM_BUILD_ROOT
+
+:> $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/initiatorname.iscsi
 
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsi
 install %{SOURCE2} $RPM_BUILD_ROOT/etc/sysconfig/iscsi
 install %{SOURCE3} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsi-devices
+install %{SOURCE4} $RPM_BUILD_ROOT/etc/logrotate.d/iscsiuio
 
-install etc/iscsid.conf $RPM_BUILD_ROOT%{_sysconfdir}/iscsi
-:> $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/initiatorname.iscsi
+install usr/iscsistart $RPM_BUILD_ROOT%{_sbindir}
+install doc/iscsistart.8 $RPM_BUILD_ROOT%{_mandir}/man8
+install doc/iscsi-iname.8 $RPM_BUILD_ROOT%{_mandir}/man8
 
-install usr/{iscsid,iscsiadm,iscsistart} $RPM_BUILD_ROOT%{_sbindir}
-install utils/iscsi{-iname,_discovery} $RPM_BUILD_ROOT%{_sbindir}
-
-install doc/*.8 $RPM_BUILD_ROOT%{_mandir}/man8
+install etc/systemd/iscsid.service $RPM_BUILD_ROOT%{systemdunitdir}
+install etc/systemd/iscsid.socket $RPM_BUILD_ROOT%{systemdunitdir}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -128,20 +141,28 @@ fi
 %doc Changelog README THANKS
 %dir %{_sysconfdir}/iscsi
 %dir %{_sysconfdir}/iscsi/ifaces
+%dir %{_sysconfdir}/iscsi/isns
 %dir %{_sysconfdir}/iscsi/nodes
 %dir %{_sysconfdir}/iscsi/send_targets
+%dir %{_sysconfdir}/iscsi/slp
+%dir %{_sysconfdir}/iscsi/static
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/iscsi/iscsid.conf
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/iscsi/initiatorname.iscsi
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/sysconfig/iscsi
+%attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/logrotate.d/iscsiuio
 %attr(754,root,root) /etc/rc.d/init.d/iscsi
 %attr(754,root,root) /etc/rc.d/init.d/iscsi-devices
+%{systemdunitdir}/iscsid.service
+%{systemdunitdir}/iscsid.socket
 %attr(755,root,root) %{_sbindir}/iscsi-iname
 %attr(755,root,root) %{_sbindir}/iscsiadm
 %attr(755,root,root) %{_sbindir}/iscsid
 %attr(755,root,root) %{_sbindir}/iscsistart
 %attr(755,root,root) %{_sbindir}/iscsi_discovery
+%attr(755,root,root) %{_sbindir}/iscsiuio
 %{_mandir}/man8/iscsi-iname.8*
 %{_mandir}/man8/iscsi_discovery.8*
 %{_mandir}/man8/iscsiadm.8*
 %{_mandir}/man8/iscsid.8*
 %{_mandir}/man8/iscsistart.8*
+%{_mandir}/man8/iscsiuio.8*
