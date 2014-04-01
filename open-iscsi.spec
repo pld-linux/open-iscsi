@@ -36,7 +36,7 @@ Patch45:	0066-start-socket-listeners-on-iscsiadm-command.patch
 URL:		http://www.open-iscsi.org/
 BuildRequires:	kmod-devel
 BuildRequires:	openssl-devel
-BuildRequires:	rpmbuild(macros) >= 1.379
+BuildRequires:	rpmbuild(macros) >= 1.671
 %if %{with dynamic}
 BuildRequires:	openslp-devel
 BuildRequires:	sed >= 4.0
@@ -46,7 +46,9 @@ BuildRequires:	glibc-static
 BuildRequires:	openslp-static
 %endif
 Requires(post,preun):	/sbin/chkconfig
+Requires(post,preun,postun):	systemd-units >= 38
 Requires:	rc-scripts
+Requires:	systemd-units >= 38
 Suggests:	multipath-tools
 Provides:	group(iscsi)
 Provides:	user(iscsi)
@@ -156,6 +158,8 @@ if ! grep -q "^InitiatorName=[^ \t\n]" %{_sysconfdir}/iscsi/initiatorname.iscsi 
 fi
 /sbin/chkconfig --add iscsi
 /sbin/chkconfig --add iscsid
+NORESTART=1
+%systemd_post iscsi.service iscsid.service iscsiuio.service iscsid.socket iscsiuio.socket
 
 %preun
 if [ "$1" = "0" ]; then
@@ -164,12 +168,19 @@ if [ "$1" = "0" ]; then
 	/sbin/chkconfig --del iscsid
 	/sbin/chkconfig --del iscsi
 fi
+%systemd_preun iscsi.service iscsid.service iscsiuio.service iscsid.socket iscsiuio.socket
 
 %postun
 if [ "$1" = "0" ]; then
 	%userremove iscsi
 	%groupremove iscsi
 fi
+%systemd_reload
+
+%triggerpostun -- %{name} < 2.0.873-1
+%systemd_trigger iscsi.service iscsid.service iscsiuio.service
+/bin/systemctl --quiet enable iscsid.socket || :
+/bin/systemctl --quiet enable iscsiuio.socket || :
 
 %files
 %defattr(644,root,root,755)
