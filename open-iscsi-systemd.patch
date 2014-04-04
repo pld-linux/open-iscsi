@@ -36,7 +36,18 @@
  Type=forking
  PIDFile=/var/run/iscsid.pid
 -ExecStart=/usr/sbin/iscsid
-+ExecStart=/usr/sbin/iscsid -u iscsi -g iscsi
++ExecStart=/sbin/iscsid -u iscsi -g iscsi
  ExecStop=/sbin/iscsiadm -k 0 2
  
  [Install]
+--- open-iscsi-2.0-873/etc/systemd/iscsiuio.service~	2014-04-01 12:54:05.000000000 +0200
++++ open-iscsi-2.0-873/etc/systemd/iscsiuio.service	2014-04-04 12:11:04.361786827 +0200
+@@ -11,7 +11,7 @@
+ [Service]
+ Type=forking
+ PIDFile=/var/run/iscsiuio.pid
+-ExecStart=/usr/sbin/iscsiuio
++ExecStart=/sbin/iscsiuio
+ 
+ [Install]
+ WantedBy=multi-user.target
