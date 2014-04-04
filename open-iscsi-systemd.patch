@@ -20,7 +20,13 @@
 +/bin/systemctl start iscsid.service
 --- open-iscsi-2.0-873/etc/systemd/iscsi.service~	2014-04-01 12:17:50.000000000 +0200
 +++ open-iscsi-2.0-873/etc/systemd/iscsi.service	2014-04-01 12:19:26.975255123 +0200
-@@ -10,7 +10,7 @@
+@@ -5,12 +5,12 @@
+ Conflicts=shutdown.target
+ After=systemd-remount-fs.service network.target iscsid.service iscsiuio.service
+ Before=remote-fs-pre.target
+-ConditionDirectoryNotEmpty=/var/lib/iscsi/nodes
++ConditionDirectoryNotEmpty=/etc/iscsi/nodes
+ 
  [Service]
  Type=oneshot
  RemainAfterExit=true
