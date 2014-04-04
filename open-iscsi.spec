@@ -7,7 +7,7 @@ Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
 Version:	%{ver}.%{subver}
-Release:	2
+Release:	3
 License:	GPL v2
 Group:		Networking/Daemons
 Source0:	http://www.open-iscsi.org/bits/%{name}-%{ver}-%{subver}.tar.gz
@@ -19,10 +19,7 @@ Source4:	iscsiuio.logrotate
 Patch0:		%{name}-git.patch
 Patch1:		%{name}-build.patch
 Patch2:		%{name}-systemd.patch
-Patch31:	0043-idmb_rec_write-check-for-tpgt-first.patch
 Patch32:	0044-iscsid-add-initrd-option-to-set-run-from-initrd-hint.patch
-Patch33:	0045-idbm_rec_write-seperate-old-and-new-style-writes.patch
-Patch34:	0046-idbw_rec_write-pick-tpgt-from-existing-record.patch
 Patch35:	0047-iscsiadm-iscsid-newroot-command-to-survive-switch_ro.patch
 Patch36:	0047-iscsiuio-systemd-socket-activation-support.patch
 Patch37:	0048-iscsiadm-param-parsing-for-advanced-node-creation.patch
@@ -76,10 +73,7 @@ informacji o protokole iSCSI znajduje się w standardach IETF na
 %prep
 %setup -q -n %{name}-%{ver}-%{subver}
 %patch0 -p1
-%patch31 -p1
 %patch32 -p1
-%patch33 -p1
-%patch34 -p1
 %patch35 -p1
 %patch36 -p1
 %patch37 -p1
