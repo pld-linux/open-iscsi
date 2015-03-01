@@ -7,7 +7,7 @@ Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
 Version:	%{ver}.%{subver}
-Release:	4
+Release:	5
 License:	GPL v2
 Group:		Networking/Daemons
 Source0:	http://www.open-iscsi.org/bits/%{name}-%{ver}-%{subver}.tar.gz
