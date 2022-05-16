@@ -1,59 +1,73 @@
---- open-iscsi-2.0-873/etc/systemd/iscsi-mark-root-nodes~	2014-04-01 12:17:50.000000000 +0200
-+++ open-iscsi-2.0-873/etc/systemd/iscsi-mark-root-nodes	2014-04-01 12:19:04.118355255 +0200
-@@ -1,13 +1,12 @@
--#!/bin/bash
-+#!/bin/sh
- 
- ISCSIADM=/sbin/iscsiadm
- 
- $ISCSIADM -m session >/dev/null 2>&1 || exit 0
- 
- $ISCSIADM -m session | while read t num i target; do
--  ip=${i%:*}
--  $ISCSIADM -m node -p $ip -T $target -o update -n node.startup -v onboot
-+	ip=${i%:*}
-+	$ISCSIADM -m node -p $ip -T $target -o update -n node.startup -v onboot
- done
- 
--systemctl start iscsid.service
--
-+/bin/systemctl start iscsid.service
---- open-iscsi-2.0-873/etc/systemd/iscsi.service~	2014-04-01 12:17:50.000000000 +0200
-+++ open-iscsi-2.0-873/etc/systemd/iscsi.service	2014-04-01 12:19:26.975255123 +0200
-@@ -5,12 +5,12 @@
- Conflicts=shutdown.target
- After=systemd-remount-fs.service network.target iscsid.service iscsiuio.service
+--- open-iscsi-2.1.4/etc/systemd/iscsi.service.orig	2022-05-15 21:39:53.531578661 +0200
++++ open-iscsi-2.1.4/etc/systemd/iscsi.service	2022-05-15 21:43:54.510273168 +0200
+@@ -5,7 +5,7 @@ DefaultDependencies=no
  Before=remote-fs-pre.target
+ After=network.target network-online.target iscsid.service iscsiuio.service systemd-remount-fs.service
+ Wants=remote-fs-pre.target
 -ConditionDirectoryNotEmpty=/var/lib/iscsi/nodes
 +ConditionDirectoryNotEmpty=/etc/iscsi/nodes
  
  [Service]
  Type=oneshot
+--- open-iscsi-2.1.4/etc/systemd/iscsid.service.orig	2022-05-15 21:39:53.531578661 +0200
++++ open-iscsi-2.1.4/etc/systemd/iscsid.service	2022-05-15 21:44:16.530153876 +0200
+@@ -9,7 +9,7 @@ Requires=iscsi-init.service iscsi-shutdo
+ [Service]
+ Type=notify
+ NotifyAccess=main
+-ExecStart=/usr/sbin/iscsid -f
++ExecStart=/sbin/iscsid -f -u iscsi -g iscsi
+ KillMode=mixed
+ Restart=on-failure
+ 
+--- open-iscsi-2.1.4/etc/systemd/iscsiuio.service.orig	2022-05-15 21:39:53.531578661 +0200
++++ open-iscsi-2.1.4/etc/systemd/iscsiuio.service	2022-05-15 21:44:41.373352622 +0200
+@@ -10,7 +10,7 @@ Before=remote-fs-pre.target iscsid.servi
+ [Service]
+ Type=notify
+ NotifyAccess=main
+-ExecStart=/usr/sbin/iscsiuio -f
++ExecStart=/sbin/iscsiuio -f
+ KillMode=mixed
+ Restart=on-failure
+ 
+--- open-iscsi-2.1.4/Makefile.orig	2022-05-15 21:56:37.309474063 +0200
++++ open-iscsi-2.1.4/Makefile	2022-05-15 22:08:13.275703691 +0200
+@@ -7,7 +7,7 @@
+ DESTDIR ?=
+ 
+ prefix = /usr
+-exec_prefix = /usr
++exec_prefix = /
+ sbindir = $(exec_prefix)/sbin
+ bindir = $(exec_prefix)/bin
+ mandir = $(prefix)/share/man
+--- open-iscsi-2.1.4/etc/systemd/iscsi-init.service.orig	2022-05-15 22:26:26.836446030 +0200
++++ open-iscsi-2.1.4/etc/systemd/iscsi-init.service	2022-05-16 20:43:43.358434144 +0200
+@@ -7,4 +7,4 @@ Before=iscsid.service
+ [Service]
+ Type=oneshot
+ RemainAfterExit=no
+-ExecStart=/usr/bin/sh -c 'echo "InitiatorName=`/usr/sbin/iscsi-iname`" > /etc/iscsi/initiatorname.iscsi'
++ExecStart=/bin/sh -c 'echo "InitiatorName=`/sbin/iscsi-iname`" > /etc/iscsi/initiatorname.iscsi'
+--- open-iscsi-2.1.4/etc/systemd/iscsi-onboot.service.orig	2022-05-15 22:26:25.683118945 +0200
++++ open-iscsi-2.1.4/etc/systemd/iscsi-onboot.service	2022-05-16 20:50:19.019623997 +0200
+@@ -9,7 +9,7 @@ ConditionDirectoryNotEmpty=/sys/class/is
+ 
+ [Service]
+ Type=oneshot
+-ExecStart=-/usr/libexec/iscsi-mark-root-nodes
++ExecStart=-/lib/systemd/pld-helpers.d/iscsi-mark-root-nodes
+ 
+ [Install]
+ WantedBy=sysinit.target
+--- open-iscsi-2.1.4/etc/systemd/iscsi-shutdown.service.orig	2022-05-15 22:26:25.683118945 +0200
++++ open-iscsi-2.1.4/etc/systemd/iscsi-shutdown.service	2022-05-16 20:50:36.799527675 +0200
+@@ -11,5 +11,5 @@ RefuseManualStop=yes
+ [Service]
+ Type=oneshot
  RemainAfterExit=true
--ExecStart=/usr/libexec/iscsi-mark-root-nodes
-+ExecStart=/lib/systemd/pld-helpers.d/iscsi-mark-root-nodes
- ExecStart=/sbin/iscsiadm -m node --loginall=automatic
- ExecStop=/bin/sync
- ExecStop=/sbin/iscsiadm -m node --logoutall=automatic
---- open-iscsi-2.0-873/etc/systemd/iscsid.service~	2014-04-01 12:17:50.000000000 +0200
-+++ open-iscsi-2.0-873/etc/systemd/iscsid.service	2014-04-01 12:20:05.375647813 +0200
-@@ -9,7 +9,7 @@
- [Service]
- Type=forking
- PIDFile=/var/run/iscsid.pid
--ExecStart=/usr/sbin/iscsid
-+ExecStart=/sbin/iscsid -u iscsi -g iscsi
- ExecStop=/sbin/iscsiadm -k 0 2
- 
- [Install]
---- open-iscsi-2.0-873/etc/systemd/iscsiuio.service~	2014-04-01 12:54:05.000000000 +0200
-+++ open-iscsi-2.0-873/etc/systemd/iscsiuio.service	2014-04-04 12:11:04.361786827 +0200
-@@ -11,7 +11,7 @@
- [Service]
- Type=forking
- PIDFile=/var/run/iscsiuio.pid
--ExecStart=/usr/sbin/iscsiuio
-+ExecStart=/sbin/iscsiuio
- 
- [Install]
- WantedBy=multi-user.target
+-ExecStart=-/usr/bin/true
+-ExecStop=-/usr/sbin/iscsiadm -m node --logoutall=all
++ExecStart=-/bin/true
++ExecStop=-/sbin/iscsiadm -m node --logoutall=all

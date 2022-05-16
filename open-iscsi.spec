@@ -1,50 +1,58 @@
-# Conditional build:
-%bcond_without	dynamic		# link utilities dynamically
 #
-%define		ver	2.0
-%define		subver	873
+# Conditional build:
+%bcond_without	python2	# CPython 2.x module
+%bcond_without	python3	# CPython 3.x module
+
 Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
-Version:	%{ver}.%{subver}
-Release:	5
+Version:	2.1.4
+Release:	1
 License:	GPL v2
 Group:		Networking/Daemons
-Source0:	http://www.open-iscsi.org/bits/%{name}-%{ver}-%{subver}.tar.gz
-# Source0-md5:	8b8316d7c9469149a6cc6234478347f7
+#Source0Download: https://github.com/open-iscsi/open-iscsi/releases
+Source0:	https://github.com/open-iscsi/open-iscsi/archive/%{version}/%{name}-%{version}.tar.gz
+# Source0-md5:	e17f1924c1d64342773eae630e15c519
 Source1:	%{name}.init
 Source2:	%{name}.sysconfig
 Source3:	%{name}-devices.init
 Source4:	iscsiuio.logrotate
-Patch0:		%{name}-git.patch
-Patch1:		%{name}-build.patch
-Patch2:		%{name}-systemd.patch
-Patch32:	0044-iscsid-add-initrd-option-to-set-run-from-initrd-hint.patch
-Patch35:	0047-iscsiadm-iscsid-newroot-command-to-survive-switch_ro.patch
-Patch36:	0047-iscsiuio-systemd-socket-activation-support.patch
-Patch37:	0048-iscsiadm-param-parsing-for-advanced-node-creation.patch
-Patch38:	0049-update-systemd-service-files-add-iscsi.service-for-s.patch
-Patch39:	0050-iscsi-boot-related-service-file-updates.patch
-Patch40:	0058-iscsiuio-IPC-newroot-command.patch
-Patch41:	0059-iscsiuio-systemd-unit-files.patch
-Patch42:	0062-Don-t-check-for-autostart-sessions-if-iscsi-is-not-u.patch
-Patch43:	0063-fix-order-of-setting-uid-gid-and-drop-supplementary-.patch
-Patch44:	0065-fix-hardened-build-of-iscsiuio.patch
-Patch45:	0066-start-socket-listeners-on-iscsiadm-command.patch
-URL:		http://www.open-iscsi.org/
+# Fedora patches
+Patch1:		0001-unit-file-tweaks.patch
+# idmb_rec_write refactoring skipped, see 75c46b011d7485a4b5676d824c7f3cdea2076f49
+Patch5:		0005-update-initscripts-and-docs.patch
+# use-var-for-config, use-red-hat-for-name skipped
+Patch8:		0008-libiscsi.patch
+Patch9:		0009-Add-macros-to-release-GIL-lock.patch
+Patch10:	0010-libiscsi-introduce-sessions-API.patch
+Patch11:	0011-libiscsi-fix-discovery-request-timeout-regression.patch
+Patch12:	0012-libiscsi-format-security-build-errors.patch
+Patch13:	0013-libiscsi-fix-build-to-use-libopeniscsiusr.patch
+Patch14:	0014-libiscsi-fix-build-against-latest-upstream-again.patch
+Patch15:	0015-remove-the-offload-boot-supported-ifdef.patch
+Patch16:	0016-Revert-iscsiadm-return-error-when-login-fails.patch
+# dont-install-scripts, use-var-lib-iscsi-in-libopeniscsiusr skipped
+Patch19:	0019-Coverity-scan-fixes.patch
+Patch20:	0020-fix-upstream-build-breakage-of-iscsiuio-LDFLAGS.patch
+# use-Red-Hat-version-string-to-match-RPM-package-vers skipped
+Patch22:	0022-iscsi_if.h-replace-zero-length-array-with-flexible-a.patch
+Patch23:	0023-stop-using-Werror-for-now.patch
+Patch24:	0024-minor-service-file-updates.patch
+Patch25:	0001-Remove-dependences-from-iscsi-init.service.patch
+# PLD specific
+Patch100:	%{name}-systemd.patch
+Patch101:	%{name}-libiscsi.patch
+URL:		https://www.open-iscsi.com/
 BuildRequires:	kmod-devel
+BuildRequires:	open-isns-devel
 BuildRequires:	openssl-devel
-BuildRequires:	rpmbuild(macros) >= 1.671
-%if %{with dynamic}
-BuildRequires:	openslp-devel
-BuildRequires:	sed >= 4.0
-Requires:	openslp >= 2.0.0
-%else
-BuildRequires:	glibc-static
-BuildRequires:	openslp-static
-%endif
+%{?with_python2:BuildRequires:	python-devel >= 1:2.5}
+%{?with_python3:BuildRequires:	python3-devel >= 1:3.2}
+BuildRequires:	rpm-pythonprov
+BuildRequires:	rpmbuild(macros) >= 1.714
 Requires(post,preun):	/sbin/chkconfig
 Requires(post,preun,postun):	systemd-units >= 38
+Requires:	%{name}-libs = %{version}-%{release}
 Requires:	rc-scripts
 Requires:	systemd-units >= 38
 Suggests:	multipath-tools
@@ -70,27 +78,74 @@ Protokół iSCSI jest zdefiniowany przez IETF do składowania IP. Więcej
 informacji o protokole iSCSI znajduje się w standardach IETF na
 <http://www.ietf.org/>.
 
-%prep
-%setup -q -n %{name}-%{ver}-%{subver}
-%patch0 -p1
-%patch32 -p1
-%patch35 -p1
-%patch36 -p1
-%patch37 -p1
-%patch38 -p1
-%patch39 -p1
-%patch40 -p1
-%patch41 -p1
-%patch42 -p1
-%patch43 -p1
-%patch44 -p1
-%patch45 -p1
-%patch1 -p1
-%patch2 -p1
+%package libs
+Summary:	Open-iSCSI shared libraries
+Summary(pl.UTF-8):	Biblioteki współdzielone Open-iSCSI
+Group:		Libraries
 
-%if %{with dynamic}
-sed -i -e 's/-static //' usr/Makefile
-%endif
+%description libs
+Open-iSCSI shared libraries.
+
+%description libs -l pl.UTF-8
+Biblioteki współdzielone Open-iSCSI.
+
+%package devel
+Summary:	Header files for Open-iSCSI libraries
+Summary(pl.UTF-8):	Pliki nagłówkowe bibliotek Open-iSCSI
+Group:		Development/Libraries
+Requires:	%{name}-libs = %{version}-%{release}
+
+%description devel
+Header files for Open-iSCSI libraries.
+
+%description devel -l pl.UTF-8
+Pliki nagłówkowe bibliotek Open-iSCSI.
+
+%package -n python-pyiscsi
+Summary:	Python 2 interface to Open-iSCSI library
+Summary(pl.UTF-8):	Interfejs Pythona 2 do biblioteki Open-iSCSI
+Group:		Libraries/Python
+Requires:	%{name}-libs = %{version}-%{release}
+
+%description -n python-pyiscsi
+Python 2 interface to Open-iSCSI library.
+
+%description -n python-pyiscsi -l pl.UTF-8
+Interfejs Pythona 2 do biblioteki Open-iSCSI.
+
+%package -n python3-pyiscsi
+Summary:	Python 3 interface to Open-iSCSI library
+Summary(pl.UTF-8):	Interfejs Pythona 3 do biblioteki Open-iSCSI
+Group:		Libraries/Python
+Requires:	%{name}-libs = %{version}-%{release}
+
+%description -n python3-pyiscsi
+Python 3 interface to Open-iSCSI library.
+
+%description -n python3-pyiscsi -l pl.UTF-8
+Interfejs Pythona 3 do biblioteki Open-iSCSI.
+
+%prep
+%setup -q
+%patch1 -p1
+%patch5 -p1
+%patch8 -p1
+%patch9 -p1
+%patch10 -p1
+%patch11 -p1
+%patch12 -p1
+%patch13 -p1
+%patch14 -p1
+%patch15 -p1
+%patch16 -p1
+%patch19 -p1
+%patch20 -p1
+%patch22 -p1
+%patch23 -p1
+%patch24 -p1
+%patch25 -p1
+%patch100 -p1
+%patch101 -p1
 
 %build
 cd iscsiuio
@@ -100,46 +155,66 @@ cd iscsiuio
 %{__autoheader}
 %{__automake}
 %configure
+cd ..
 
-cd ../utils/open-isns
-%configure \
-	--with-slp \
-	--without-security
-cd ../..
 %{__make} \
 	CC="%{__cc}" \
-	OPTFLAGS="%{rpmcflags} %{rpmcppflags} -DUSE_KMOD -lkmod" \
-	IPC_FLAGS="-DNETLINK_ISCSI=8 -D_GNU_SOURCE" \
+	OPTFLAGS="%{rpmcflags} %{rpmcppflags}" \
+	SED=sed \
 	KSUBLEVEL=0
+
+cd libiscsi
+%if %{with python2}
+%py_build
+%endif
+%if %{with python3}
+%py3_build
+%endif
 
 %install
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/{nodes,send_targets,static,isns,slp,ifaces} \
 	$RPM_BUILD_ROOT/etc/{rc.d/init.d,sysconfig,logrotate.d} \
 	$RPM_BUILD_ROOT%{systemdunitdir} \
-	$RPM_BUILD_ROOT/lib/systemd/pld-helpers.d
+	$RPM_BUILD_ROOT{/sbin,/lib/systemd/pld-helpers.d}
 
-%{__make} install_programs install_doc install_etc \
+%{__make} -j1 install_programs install_doc install_etc install_libopeniscsiusr \
 	DESTDIR=$RPM_BUILD_ROOT
 
 :> $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/initiatorname.iscsi
 
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsid
-install %{SOURCE2} $RPM_BUILD_ROOT/etc/sysconfig/iscsi
+cp -p %{SOURCE2} $RPM_BUILD_ROOT/etc/sysconfig/iscsi
 install %{SOURCE3} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsi
-install %{SOURCE4} $RPM_BUILD_ROOT/etc/logrotate.d/iscsiuio
+cp -p %{SOURCE4} $RPM_BUILD_ROOT/etc/logrotate.d/iscsiuio
 
 install usr/iscsistart $RPM_BUILD_ROOT%{_sbindir}
-install doc/iscsistart.8 $RPM_BUILD_ROOT%{_mandir}/man8
-install doc/iscsi-iname.8 $RPM_BUILD_ROOT%{_mandir}/man8
+cp -p doc/iscsistart.8 $RPM_BUILD_ROOT%{_mandir}/man8
+#install doc/iscsi-iname.8 $RPM_BUILD_ROOT%{_mandir}/man8
 
-install etc/systemd/iscsi.service $RPM_BUILD_ROOT%{systemdunitdir}
-install etc/systemd/iscsid.service $RPM_BUILD_ROOT%{systemdunitdir}
-install etc/systemd/iscsid.socket $RPM_BUILD_ROOT%{systemdunitdir}
-install etc/systemd/iscsiuio.service $RPM_BUILD_ROOT%{systemdunitdir}
-install etc/systemd/iscsiuio.socket $RPM_BUILD_ROOT%{systemdunitdir}
+cp -p etc/systemd/iscsi.service $RPM_BUILD_ROOT%{systemdunitdir}
+cp -p etc/systemd/iscsi-init.service $RPM_BUILD_ROOT%{systemdunitdir}
+cp -p etc/systemd/iscsi-onboot.service $RPM_BUILD_ROOT%{systemdunitdir}
+cp -p etc/systemd/iscsi-shutdown.service $RPM_BUILD_ROOT%{systemdunitdir}
+cp -p etc/systemd/iscsid.service $RPM_BUILD_ROOT%{systemdunitdir}
+cp -p etc/systemd/iscsid.socket $RPM_BUILD_ROOT%{systemdunitdir}
+cp -p etc/systemd/iscsiuio.service $RPM_BUILD_ROOT%{systemdunitdir}
+cp -p etc/systemd/iscsiuio.socket $RPM_BUILD_ROOT%{systemdunitdir}
 
 install etc/systemd/iscsi-mark-root-nodes $RPM_BUILD_ROOT/lib/systemd/pld-helpers.d
+
+# rename to resolve conflict with already existing libiscsi from libiscsi.spec
+install -p libiscsi/libopeniscsi.so.0 $RPM_BUILD_ROOT%{_libdir}
+ln -sf libopeniscsi.so.0 $RPM_BUILD_ROOT%{_libdir}/libopeniscsi.so
+cp -p libiscsi/libiscsi.h $RPM_BUILD_ROOT%{_includedir}/libopeniscsi.h
+
+cd libiscsi
+%if %{with python2}
+%py_install
+%endif
+%if %{with python3}
+%py3_install
+%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -155,7 +230,7 @@ fi
 /sbin/chkconfig --add iscsi
 /sbin/chkconfig --add iscsid
 NORESTART=1
-%systemd_post iscsi.service iscsid.service iscsiuio.service iscsid.socket iscsiuio.socket
+%systemd_post iscsi.service iscsid.service iscsiuio.service iscsid.socket iscsiuio.socket iscsi-onboot.service iscsi-init.service iscsi-shutdown.service
 
 %preun
 if [ "$1" = "0" ]; then
@@ -164,7 +239,7 @@ if [ "$1" = "0" ]; then
 	/sbin/chkconfig --del iscsid
 	/sbin/chkconfig --del iscsi
 fi
-%systemd_preun iscsi.service iscsid.service iscsiuio.service iscsid.socket iscsiuio.socket
+%systemd_preun iscsi.service iscsid.service iscsiuio.service iscsid.socket iscsiuio.socket iscsi-onboot.service iscsi-init.service iscsi-shutdown.service
 
 %postun
 if [ "$1" = "0" ]; then
@@ -178,9 +253,12 @@ fi
 /bin/systemctl --quiet enable iscsid.socket || :
 /bin/systemctl --quiet enable iscsiuio.socket || :
 
+%post	libs -p /sbin/ldconfig
+%postun	libs -p /sbin/ldconfig
+
 %files
 %defattr(644,root,root,755)
-%doc Changelog README THANKS
+%doc Changelog README THANKS TODO
 %dir %{_sysconfdir}/iscsi
 %dir %{_sysconfdir}/iscsi/ifaces
 %dir %{_sysconfdir}/iscsi/isns
@@ -195,20 +273,55 @@ fi
 %attr(754,root,root) /etc/rc.d/init.d/iscsi
 %attr(754,root,root) /etc/rc.d/init.d/iscsid
 %{systemdunitdir}/iscsi.service
+%{systemdunitdir}/iscsi-init.service
+%{systemdunitdir}/iscsi-onboot.service
+%{systemdunitdir}/iscsi-shutdown.service
 %{systemdunitdir}/iscsid.service
 %{systemdunitdir}/iscsid.socket
 %{systemdunitdir}/iscsiuio.service
 %{systemdunitdir}/iscsiuio.socket
 %attr(755,root,root) /lib/systemd/pld-helpers.d/iscsi-mark-root-nodes
+%attr(755,root,root) %{_sbindir}/iscsi-gen-initiatorname
 %attr(755,root,root) %{_sbindir}/iscsi-iname
+%attr(755,root,root) %{_sbindir}/iscsi_discovery
+%attr(755,root,root) %{_sbindir}/iscsi_fw_login
+%attr(755,root,root) %{_sbindir}/iscsi_offload
 %attr(755,root,root) %{_sbindir}/iscsiadm
 %attr(755,root,root) %{_sbindir}/iscsid
 %attr(755,root,root) %{_sbindir}/iscsistart
-%attr(755,root,root) %{_sbindir}/iscsi_discovery
 %attr(755,root,root) %{_sbindir}/iscsiuio
 %{_mandir}/man8/iscsi-iname.8*
 %{_mandir}/man8/iscsi_discovery.8*
+%{_mandir}/man8/iscsi_fw_login.8*
 %{_mandir}/man8/iscsiadm.8*
 %{_mandir}/man8/iscsid.8*
 %{_mandir}/man8/iscsistart.8*
 %{_mandir}/man8/iscsiuio.8*
+
+%files libs
+%defattr(644,root,root,755)
+%attr(755,root,root) %{_libdir}/libopeniscsi.so.0
+%attr(755,root,root) %{_libdir}/libopeniscsiusr.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libopeniscsiusr.so.0
+
+%files devel
+%defattr(644,root,root,755)
+%attr(755,root,root) %{_libdir}/libopeniscsi.so
+%attr(755,root,root) %{_libdir}/libopeniscsiusr.so
+%{_includedir}/libopeniscsi.h
+%{_includedir}/libopeniscsiusr*.h
+%{_pkgconfigdir}/libopeniscsiusr.pc
+
+%if %{with python2}
+%files -n python-pyiscsi
+%defattr(644,root,root,755)
+%attr(755,root,root) %{py_sitedir}/libiscsi.so
+%{py_sitedir}/PyIscsi-1.0-py*.egg-info
+%endif
+
+%if %{with python3}
+%files -n python3-pyiscsi
+%defattr(644,root,root,755)
+%attr(755,root,root) %{py3_sitedir}/libiscsi.cpython-*.so
+%{py3_sitedir}/PyIscsi-1.0-py*.egg-info
+%endif
