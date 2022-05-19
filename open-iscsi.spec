@@ -178,6 +178,7 @@ install -d $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/{nodes,send_targets,static,isns,s
 
 %{__make} -j1 install_programs install_doc install_etc install_libopeniscsiusr install_iscsiuio \
 	DESTDIR=$RPM_BUILD_ROOT \
+	LIB_DIR=%{_libdir} \
 	RULESDIR=/lib/udev/rules.d
 
 :> $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/initiatorname.iscsi
