@@ -6,13 +6,13 @@
 Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
-Version:	2.1.4
+Version:	2.1.7
 Release:	1
 License:	GPL v2
 Group:		Networking/Daemons
 #Source0Download: https://github.com/open-iscsi/open-iscsi/releases
 Source0:	https://github.com/open-iscsi/open-iscsi/archive/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	e17f1924c1d64342773eae630e15c519
+# Source0-md5:	87f37b0968ff91ed0253d53d497da4cb
 Source1:	%{name}.init
 Source2:	%{name}.sysconfig
 Source3:	%{name}-devices.init
@@ -33,12 +33,12 @@ Patch15:	0015-remove-the-offload-boot-supported-ifdef.patch
 Patch16:	0016-Revert-iscsiadm-return-error-when-login-fails.patch
 # dont-install-scripts, use-var-lib-iscsi-in-libopeniscsiusr skipped
 Patch19:	0019-Coverity-scan-fixes.patch
-Patch20:	0020-fix-upstream-build-breakage-of-iscsiuio-LDFLAGS.patch
+# fix-upstream-build-breakage-of-iscsiuio-LDFLAGS obsolete in 2.1.7
 # use-Red-Hat-version-string-to-match-RPM-package-vers skipped
 Patch22:	0022-iscsi_if.h-replace-zero-length-array-with-flexible-a.patch
 Patch23:	0023-stop-using-Werror-for-now.patch
 Patch24:	0024-minor-service-file-updates.patch
-Patch25:	0001-Remove-dependences-from-iscsi-init.service.patch
+# Remove-dependences-from-iscsi-init.service obsolete in 2.1.7
 # PLD specific
 Patch100:	%{name}-systemd.patch
 Patch101:	%{name}-libiscsi.patch
@@ -139,11 +139,9 @@ Interfejs Pythona 3 do biblioteki Open-iSCSI.
 %patch15 -p1
 %patch16 -p1
 %patch19 -p1
-%patch20 -p1
 %patch22 -p1
 %patch23 -p1
 %patch24 -p1
-%patch25 -p1
 %patch100 -p1
 %patch101 -p1
 
@@ -178,15 +176,18 @@ install -d $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/{nodes,send_targets,static,isns,s
 	$RPM_BUILD_ROOT%{systemdunitdir} \
 	$RPM_BUILD_ROOT{/sbin,/lib/systemd/pld-helpers.d}
 
-%{__make} -j1 install_programs install_doc install_etc install_libopeniscsiusr \
-	DESTDIR=$RPM_BUILD_ROOT
+%{__make} -j1 install_programs install_doc install_etc install_libopeniscsiusr install_iscsiuio \
+	DESTDIR=$RPM_BUILD_ROOT \
+	RULESDIR=/lib/udev/rules.d
 
 :> $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/initiatorname.iscsi
 
 install %{SOURCE1} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsid
 cp -p %{SOURCE2} $RPM_BUILD_ROOT/etc/sysconfig/iscsi
 install %{SOURCE3} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsi
+# or use upstream file instead?
 cp -p %{SOURCE4} $RPM_BUILD_ROOT/etc/logrotate.d/iscsiuio
+%{__rm} $RPM_BUILD_ROOT/etc/logrotate.d/iscsiuiolog
 
 install usr/iscsistart $RPM_BUILD_ROOT%{_sbindir}
 cp -p doc/iscsistart.8 $RPM_BUILD_ROOT%{_mandir}/man8
@@ -272,6 +273,7 @@ fi
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/logrotate.d/iscsiuio
 %attr(754,root,root) /etc/rc.d/init.d/iscsi
 %attr(754,root,root) /etc/rc.d/init.d/iscsid
+/lib/udev/rules.d/50-iscsi-firmware-login.rules
 %{systemdunitdir}/iscsi.service
 %{systemdunitdir}/iscsi-init.service
 %{systemdunitdir}/iscsi-onboot.service
@@ -281,6 +283,7 @@ fi
 %{systemdunitdir}/iscsiuio.service
 %{systemdunitdir}/iscsiuio.socket
 %attr(755,root,root) /lib/systemd/pld-helpers.d/iscsi-mark-root-nodes
+%attr(755,root,root) %{_sbindir}/brcm_iscsiuio
 %attr(755,root,root) %{_sbindir}/iscsi-gen-initiatorname
 %attr(755,root,root) %{_sbindir}/iscsi-iname
 %attr(755,root,root) %{_sbindir}/iscsi_discovery
@@ -290,6 +293,7 @@ fi
 %attr(755,root,root) %{_sbindir}/iscsid
 %attr(755,root,root) %{_sbindir}/iscsistart
 %attr(755,root,root) %{_sbindir}/iscsiuio
+%{_mandir}/man8/iscsi-gen-initiatorname.8*
 %{_mandir}/man8/iscsi-iname.8*
 %{_mandir}/man8/iscsi_discovery.8*
 %{_mandir}/man8/iscsi_fw_login.8*
@@ -311,6 +315,8 @@ fi
 %{_includedir}/libopeniscsi.h
 %{_includedir}/libopeniscsiusr*.h
 %{_pkgconfigdir}/libopeniscsiusr.pc
+%{_mandir}/man3/iscsi_*.3*
+%{_mandir}/man3/libopeniscsiusr.h.3*
 
 %if %{with python2}
 %files -n python-pyiscsi

@@ -22,20 +22,20 @@ The following are started automatically as needed:
 
 diff --git a/etc/systemd/iscsi-init.service b/etc/systemd/iscsi-init.service
 index e058ff0..c3370ec 100644
---- a/etc/systemd/iscsi-init.service
-+++ b/etc/systemd/iscsi-init.service
-@@ -1,6 +1,7 @@
- [Unit]
- Description=One time configuration for iscsi.service
- ConditionPathExists=!/etc/iscsi/initiatorname.iscsi
+--- a/etc/systemd/iscsi-init.service.template
++++ b/etc/systemd/iscsi-init.service.template
+@@ -7,6 +7,7 @@ RequiresMountsFor=/etc/iscsi
+ # local-fs.target, don't start it here (no Wants=) but if
+ # it's running wait for it to finish
+ After=systemd-remount-fs.service
 +Before=iscsid.service
  
- [Service]
- Type=oneshot
+ [Install]
+ # this ensures we are in the same transaction with
 diff --git a/etc/systemd/iscsi.service b/etc/systemd/iscsi.service
 index 175cb2c..6c542d2 100644
---- a/etc/systemd/iscsi.service
-+++ b/etc/systemd/iscsi.service
+--- a/etc/systemd/iscsi.service.template
++++ b/etc/systemd/iscsi.service.template
 @@ -4,7 +4,7 @@ Documentation=man:iscsiadm(8) man:iscsid(8)
  DefaultDependencies=no
  Before=remote-fs-pre.target
@@ -47,8 +47,8 @@ index 175cb2c..6c542d2 100644
  [Service]
 diff --git a/etc/systemd/iscsid.service b/etc/systemd/iscsid.service
 index 324c593..df0bd83 100644
---- a/etc/systemd/iscsid.service
-+++ b/etc/systemd/iscsid.service
+--- a/etc/systemd/iscsid.service.template
++++ b/etc/systemd/iscsid.service.template
 @@ -4,7 +4,7 @@ Documentation=man:iscsid(8) man:iscsiuio(8) man:iscsiadm(8)
  DefaultDependencies=no
  After=network-online.target iscsiuio.service iscsi-init.service

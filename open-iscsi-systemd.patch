@@ -1,5 +1,5 @@
---- open-iscsi-2.1.4/etc/systemd/iscsi.service.orig	2022-05-15 21:39:53.531578661 +0200
-+++ open-iscsi-2.1.4/etc/systemd/iscsi.service	2022-05-15 21:43:54.510273168 +0200
+--- open-iscsi-2.1.4/etc/systemd/iscsi.service.template.orig	2022-05-15 21:39:53.531578661 +0200
++++ open-iscsi-2.1.4/etc/systemd/iscsi.service.template	2022-05-15 21:43:54.510273168 +0200
 @@ -5,7 +5,7 @@ DefaultDependencies=no
  Before=remote-fs-pre.target
  After=network.target network-online.target iscsid.service iscsiuio.service systemd-remount-fs.service
@@ -9,47 +9,36 @@
  
  [Service]
  Type=oneshot
---- open-iscsi-2.1.4/etc/systemd/iscsid.service.orig	2022-05-15 21:39:53.531578661 +0200
-+++ open-iscsi-2.1.4/etc/systemd/iscsid.service	2022-05-15 21:44:16.530153876 +0200
+--- open-iscsi-2.1.7/etc/systemd/iscsid.service.template.orig	2022-05-16 22:04:51.668726910 +0200
++++ open-iscsi-2.1.7/etc/systemd/iscsid.service.template	2022-05-16 22:12:39.789524215 +0200
 @@ -9,7 +9,7 @@ Requires=iscsi-init.service iscsi-shutdo
  [Service]
  Type=notify
  NotifyAccess=main
--ExecStart=/usr/sbin/iscsid -f
-+ExecStart=/sbin/iscsid -f -u iscsi -g iscsi
+-ExecStart=@SBINDIR@/iscsid -f
++ExecStart=@SBINDIR@/iscsid -f -u iscsi -g iscsi
  KillMode=mixed
  Restart=on-failure
  
---- open-iscsi-2.1.4/etc/systemd/iscsiuio.service.orig	2022-05-15 21:39:53.531578661 +0200
-+++ open-iscsi-2.1.4/etc/systemd/iscsiuio.service	2022-05-15 21:44:41.373352622 +0200
-@@ -10,7 +10,7 @@ Before=remote-fs-pre.target iscsid.servi
- [Service]
- Type=notify
- NotifyAccess=main
--ExecStart=/usr/sbin/iscsiuio -f
-+ExecStart=/sbin/iscsiuio -f
- KillMode=mixed
- Restart=on-failure
- 
---- open-iscsi-2.1.4/Makefile.orig	2022-05-15 21:56:37.309474063 +0200
-+++ open-iscsi-2.1.4/Makefile	2022-05-15 22:08:13.275703691 +0200
+--- open-iscsi-2.1.7/Makefile.orig	2022-05-16 22:24:15.152423778 +0200
++++ open-iscsi-2.1.7/Makefile	2022-05-16 22:38:37.014421337 +0200
 @@ -7,7 +7,7 @@
  DESTDIR ?=
  
  prefix = /usr
 -exec_prefix = /usr
-+exec_prefix = /
- sbindir = $(exec_prefix)/sbin
- bindir = $(exec_prefix)/bin
++exec_prefix =
  mandir = $(prefix)/share/man
---- open-iscsi-2.1.4/etc/systemd/iscsi-init.service.orig	2022-05-15 22:26:26.836446030 +0200
-+++ open-iscsi-2.1.4/etc/systemd/iscsi-init.service	2022-05-16 20:43:43.358434144 +0200
-@@ -7,4 +7,4 @@ Before=iscsid.service
+ etcdir = /etc
+ 
+--- open-iscsi-2.1.7/etc/systemd/iscsi-init.service.template.orig	2022-05-16 22:24:15.152423778 +0200
++++ open-iscsi-2.1.7/etc/systemd/iscsi-init.service.template	2022-05-16 22:39:01.854286768 +0200
+@@ -17,4 +17,4 @@ WantedBy=systemd-remount-fs.service
  [Service]
  Type=oneshot
  RemainAfterExit=no
--ExecStart=/usr/bin/sh -c 'echo "InitiatorName=`/usr/sbin/iscsi-iname`" > /etc/iscsi/initiatorname.iscsi'
-+ExecStart=/bin/sh -c 'echo "InitiatorName=`/sbin/iscsi-iname`" > /etc/iscsi/initiatorname.iscsi'
+-ExecStart=/usr/bin/sh -c 'echo "InitiatorName=`@SBINDIR@/iscsi-iname`" > /etc/iscsi/initiatorname.iscsi'
++ExecStart=/bin/sh -c 'echo "InitiatorName=`@SBINDIR@/iscsi-iname`" > /etc/iscsi/initiatorname.iscsi'
 --- open-iscsi-2.1.4/etc/systemd/iscsi-onboot.service.orig	2022-05-15 22:26:25.683118945 +0200
 +++ open-iscsi-2.1.4/etc/systemd/iscsi-onboot.service	2022-05-16 20:50:19.019623997 +0200
 @@ -9,7 +9,7 @@ ConditionDirectoryNotEmpty=/sys/class/is

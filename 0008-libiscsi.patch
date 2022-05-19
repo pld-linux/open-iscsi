@@ -48,28 +48,28 @@ diff --git a/Makefile b/Makefile
 index 7b445a5..4ab091f 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -65,6 +65,7 @@ user: iscsiuio/Makefile
- 	$(MAKE) -C usr
- 	$(MAKE) -C utils
- 	$(MAKE) -C iscsiuio
-+	$(MAKE) -C libiscsi
+@@ -56,6 +56,7 @@ user: iscsiuio/Makefile
+ 	$(MAKE) $(MFLAGS) -C utils
+ 	$(MAKE) $(MFLAGS) -C etc
+ 	$(MAKE) $(MFLAGS) -C iscsiuio
++	$(MAKE) $(MFLAGS) -C libiscsi
+ 	$(MAKE) $(MFLAGS) -C doc
  	@echo
  	@echo "Compilation complete                 Output file"
- 	@echo "-----------------------------------  ----------------"
-@@ -85,6 +86,7 @@ iscsiuio/configure iscsiuio/Makefile.in: iscsiuio/configure.ac iscsiuio/Makefile
+@@ -77,6 +78,7 @@ iscsiuio/configure: iscsiuio/configure.a
  force: ;
  
  clean:
-+	$(MAKE) -C libiscsi clean
- 	$(MAKE) -C utils/sysdeps clean
- 	$(MAKE) -C utils/fwparam_ibft clean
- 	$(MAKE) -C utils clean
++	$(MAKE) $(MFLAGS) -C libiscsi clean
+ 	$(MAKE) $(MFLAGS) -C utils/sysdeps clean
+ 	$(MAKE) $(MFLAGS) -C utils clean
+ 	$(MAKE) $(MFLAGS) -C usr clean
 diff --git a/libiscsi/Makefile b/libiscsi/Makefile
 new file mode 100644
 index 0000000..53f9746
 --- /dev/null
 +++ b/libiscsi/Makefile
-@@ -0,0 +1,65 @@
+@@ -0,0 +1,67 @@
 +# This Makefile will work only with GNU make.
 +
 +ifeq ($(TOPDIR),)
@@ -77,10 +77,12 @@ index 0000000..53f9746
 +endif
 +
 +OSNAME=$(shell uname -s)
++etcdir = /etc
++DBROOT ?= $(etcdir)/iscsi
 +OPTFLAGS ?= -O2 -g
 +WARNFLAGS ?= -Wall -Wstrict-prototypes
 +CFLAGS = $(OPTFLAGS) $(WARNFLAGS) -I../include -I../usr \
-+		-D$(OSNAME) -fPIC -D_GNU_SOURCE -fvisibility=hidden
++		-D$(OSNAME) -DISCSI_DB_ROOT=\"$(DBROOT)\" -fPIC -D_GNU_SOURCE -fvisibility=hidden
 +LIB = libiscsi.so.0
 +TESTS = tests/test_discovery_sendtargets tests/test_discovery_firmware
 +TESTS += tests/test_login tests/test_logout tests/test_params
@@ -114,7 +116,7 @@ index 0000000..53f9746
 +	mkdir -p usr-objs
 +	$(CC) $(CFLAGS) -c $< -o $@
 +
-+fw-objs/%.o: ../utils/fwparam_ibft/%.c
++fw-objs/%.o: ../usr/fwparam_ibft/%.c
 +	mkdir -p fw-objs
 +	$(CC) $(CFLAGS) -c $< -o $@
 +
@@ -3917,15 +3919,15 @@ diff --git a/usr/Makefile b/usr/Makefile
 index 21bb154..885243a 100644
 --- a/usr/Makefile
 +++ b/usr/Makefile
-@@ -37,7 +37,7 @@ PKG_CONFIG = /usr/bin/pkg-config
+@@ -46,7 +46,7 @@ PKG_CONFIG ?= /usr/bin/pkg-config
  CFLAGS ?= -O2 -g
  WARNFLAGS ?= -Wall -Wextra -Werror -Wstrict-prototypes -fno-common
  CFLAGS += $(WARNFLAGS) -I../include -I. -D_GNU_SOURCE \
 -	  -I$(TOPDIR)/libopeniscsiusr
 +	  -I$(TOPDIR)/libopeniscsiusr -DISNS_ENABLE
  CFLAGS += $(shell $(PKG_CONFIG) --cflags libkmod)
+ CFLAGS += $(shell $(PKG_CONFIG) --cflags libsystemd)
  ISCSI_LIB = -L$(TOPDIR)/libopeniscsiusr -lopeniscsiusr
- LDFLAGS += $(shell $(PKG_CONFIG) --libs libkmod)
 diff --git a/usr/discovery.c b/usr/discovery.c
 index 7dec696..2cf1838 100644
 --- a/usr/discovery.c

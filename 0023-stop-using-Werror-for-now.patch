@@ -20,17 +20,17 @@ index 7e6b734..0069e75 100644
  DESTDIR ?=
  
  prefix = /usr
--exec_prefix = /
+-exec_prefix =
 +exec_prefix = /usr
- sbindir = $(exec_prefix)/sbin
- bindir = $(exec_prefix)/bin
  mandir = $(prefix)/share/man
+ etcdir = /etc
+ 
 diff --git a/usr/Makefile b/usr/Makefile
 index 885243a..1a743d1 100644
 --- a/usr/Makefile
 +++ b/usr/Makefile
-@@ -35,7 +35,7 @@ endif
- PKG_CONFIG = /usr/bin/pkg-config
+@@ -44,7 +44,7 @@ HOMEDIR ?= $(etcdir)/iscsi
+ PKG_CONFIG ?= /usr/bin/pkg-config
  
  CFLAGS ?= -O2 -g
 -WARNFLAGS ?= -Wall -Wextra -Werror -Wstrict-prototypes -fno-common

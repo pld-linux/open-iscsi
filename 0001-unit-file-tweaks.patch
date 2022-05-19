@@ -99,8 +99,8 @@ index 0000000..caee933
 +ExecStop=-/usr/sbin/iscsiadm -m node --logoutall=all
 diff --git a/etc/systemd/iscsi.service b/etc/systemd/iscsi.service
 index 5e394b9..175cb2c 100644
---- a/etc/systemd/iscsi.service
-+++ b/etc/systemd/iscsi.service
+--- a/etc/systemd/iscsi.service.template
++++ b/etc/systemd/iscsi.service.template
 @@ -1,18 +1,18 @@
  [Unit]
  Description=Login and scanning of iSCSI devices
@@ -117,21 +117,21 @@ index 5e394b9..175cb2c 100644
  
  [Service]
  Type=oneshot
--ExecStart=/sbin/iscsiadm -m node --loginall=automatic -W
--ExecStop=/sbin/iscsiadm -m node --logoutall=automatic
--ExecStop=/sbin/iscsiadm -m node --logoutall=manual
+-ExecStart=@SBINDIR@/iscsiadm -m node --loginall=automatic -W
+-ExecStop=@SBINDIR@/iscsiadm -m node --logoutall=automatic
+-ExecStop=@SBINDIR@/iscsiadm -m node --logoutall=manual
 -SuccessExitStatus=21 15
  RemainAfterExit=true
-+ExecStart=-/usr/sbin/iscsiadm -m node --loginall=automatic
-+ExecReload=-/usr/sbin/iscsiadm -m node --loginall=automatic
++ExecStart=-@SBINDIR@/iscsiadm -m node --loginall=automatic
++ExecReload=-@SBINDIR@/iscsiadm -m node --loginall=automatic
 +SuccessExitStatus=21
  
  [Install]
  WantedBy=remote-fs.target
 diff --git a/etc/systemd/iscsid.service b/etc/systemd/iscsid.service
 index 3fd7dd3..324c593 100644
---- a/etc/systemd/iscsid.service
-+++ b/etc/systemd/iscsid.service
+--- a/etc/systemd/iscsid.service.template
++++ b/etc/systemd/iscsid.service.template
 @@ -4,13 +4,12 @@ Documentation=man:iscsid(8) man:iscsiuio(8) man:iscsiadm(8)
  DefaultDependencies=no
  After=network-online.target iscsiuio.service iscsi-init.service
@@ -142,15 +142,15 @@ index 3fd7dd3..324c593 100644
  [Service]
  Type=notify
  NotifyAccess=main
--ExecStart=/sbin/iscsid -f
-+ExecStart=/usr/sbin/iscsid -f
+-ExecStart=@SBINDIR@/iscsid -f
++ExecStart=@SBINDIR@/iscsid -f
  KillMode=mixed
  Restart=on-failure
  
 diff --git a/etc/systemd/iscsiuio.service b/etc/systemd/iscsiuio.service
 index 923e019..fc0be93 100644
---- a/etc/systemd/iscsiuio.service
-+++ b/etc/systemd/iscsiuio.service
+--- a/etc/systemd/iscsiuio.service.template
++++ b/etc/systemd/iscsiuio.service.template
 @@ -2,17 +2,15 @@
  Description=iSCSI UserSpace I/O driver
  Documentation=man:iscsiuio(8)
@@ -165,8 +165,8 @@ index 923e019..fc0be93 100644
  [Service]
  Type=notify
  NotifyAccess=main
--ExecStart=/sbin/iscsiuio -f
-+ExecStart=/usr/sbin/iscsiuio -f
+-ExecStart=@SBINDIR@/iscsiuio -f
++ExecStart=@SBINDIR@/iscsiuio -f
  KillMode=mixed
  Restart=on-failure
  

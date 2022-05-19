@@ -1,15 +1,15 @@
---- open-iscsi-2.1.4/libiscsi/Makefile.orig	2022-05-16 21:07:19.280763434 +0200
-+++ open-iscsi-2.1.4/libiscsi/Makefile	2022-05-16 21:12:22.995784736 +0200
-@@ -11,7 +11,7 @@ CFLAGS = $(OPTFLAGS) $(WARNFLAGS) -I../i
- 		-D$(OSNAME) -fPIC -D_GNU_SOURCE -fvisibility=hidden \
- 		-I../libopeniscsiusr
+--- open-iscsi-2.1.7/libiscsi/Makefile.orig	2022-05-18 22:03:58.254329591 +0200
++++ open-iscsi-2.1.7/libiscsi/Makefile	2022-05-18 22:04:23.824191067 +0200
+@@ -13,7 +13,7 @@ CFLAGS = $(OPTFLAGS) $(WARNFLAGS) -I../i
+ 		-I../libopeniscsiusr \
+ 		-D$(OSNAME) -DISCSI_DB_ROOT=\"$(DBROOT)\" -fPIC -D_GNU_SOURCE -fvisibility=hidden
  LDFLAGS = -L../libopeniscsiusr -lopeniscsiusr -lkmod -lcrypto
 -LIB = libiscsi.so.0
 +LIB = libopeniscsi.so.0
  TESTS = tests/test_discovery_sendtargets tests/test_discovery_firmware
  TESTS += tests/test_login tests/test_logout tests/test_params
  TESTS += tests/test_get_network_config tests/test_get_initiator_name
-@@ -49,7 +49,7 @@ fw-objs/%.o: ../utils/fwparam_ibft/%.c
+@@ -51,7 +51,7 @@ fw-objs/%.o: ../usr/fwparam_ibft/%.c
  	$(CC) $(CFLAGS) -c $< -o $@
  
  $(LIB): $(COMMON_OBJS) $(FW_OBJS) $(USR_OBJS) libiscsi.o

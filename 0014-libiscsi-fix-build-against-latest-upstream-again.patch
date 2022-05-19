@@ -12,16 +12,16 @@ diff --git a/libiscsi/Makefile b/libiscsi/Makefile
 index f2cf248..462d666 100644
 --- a/libiscsi/Makefile
 +++ b/libiscsi/Makefile
-@@ -10,7 +10,7 @@ WARNFLAGS ?= -Wall -Wstrict-prototypes
+@@ -12,7 +12,7 @@ WARNFLAGS ?= -Wall -Wstrict-prototypes
  CFLAGS = $(OPTFLAGS) $(WARNFLAGS) -I../include -I../usr \
- 		-D$(OSNAME) -fPIC -D_GNU_SOURCE -fvisibility=hidden \
- 		-I../libopeniscsiusr
+ 		-I../libopeniscsiusr \
+ 		-D$(OSNAME) -DISCSI_DB_ROOT=\"$(DBROOT)\" -fPIC -D_GNU_SOURCE -fvisibility=hidden
 -LDFLAGS = -L../libopeniscsiusr -lopeniscsiusr
 +LDFLAGS = -L../libopeniscsiusr -lopeniscsiusr -lkmod -lcrypto
  LIB = libiscsi.so.0
  TESTS = tests/test_discovery_sendtargets tests/test_discovery_firmware
  TESTS += tests/test_login tests/test_logout tests/test_params
-@@ -19,7 +19,7 @@ TESTS += tests/test_set_auth tests/test_get_auth
+@@ -21,7 +21,7 @@ TESTS += tests/test_set_auth tests/test_
  
  COMMON_SRCS = sysdeps.o
  # sources shared between iscsid, iscsiadm and iscsistart
