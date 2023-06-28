@@ -43,6 +43,7 @@ Patch24:	0024-minor-service-file-updates.patch
 Patch100:	%{name}-systemd.patch
 Patch101:	%{name}-libiscsi.patch
 URL:		https://www.open-iscsi.com/
+BuildRequires:	doxygen
 BuildRequires:	kmod-devel
 BuildRequires:	open-isns-devel
 BuildRequires:	openssl-devel
