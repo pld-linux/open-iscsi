@@ -2,6 +2,7 @@
 # Conditional build:
 %bcond_without	python2	# CPython 2.x module
 %bcond_without	python3	# CPython 3.x module
+%bcond_without	systemd	# systemd
 
 Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
@@ -153,12 +154,13 @@ cd iscsiuio
 %{__autoconf}
 %{__autoheader}
 %{__automake}
-%configure
+%configure \
+	%{!?with_systemd:--without-systemd}
 cd ..
 
 %{__make} \
 	CC="%{__cc}" \
-	OPTFLAGS="%{rpmcflags} %{rpmcppflags}" \
+	OPTFLAGS="%{rpmcflags} %{rpmcppflags} %{!?with_systemd:-DNO_SYSTEMD}" \
 	SED=sed \
 	KSUBLEVEL=0
 
