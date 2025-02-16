@@ -1,7 +1,11 @@
---- open-iscsi-2.1.10/libiscsi/Makefile.orig	2025-02-16 15:32:07.487486345 +0100
-+++ open-iscsi-2.1.10/libiscsi/Makefile	2025-02-16 15:33:32.870357120 +0100
-@@ -22,7 +22,7 @@ CFLAGS += -DISCSI_VERSION_STR=\"$(ISCSI_
- CFLAGS += -L../redhat-linux-build
+--- open-iscsi-2.1.10/libiscsi/Makefile.orig	2025-02-16 18:11:07.852468418 +0100
++++ open-iscsi-2.1.10/libiscsi/Makefile	2025-02-16 18:13:27.081714148 +0100
+@@ -19,10 +19,10 @@ CFLAGS += -DSBINDIR=\"$(SBINDIR)\"
+ CFLAGS += -DISCSI_DB_ROOT=\"$(DBROOT)\"
+ CFLAGS += -DISCSI_VERSION_STR=\"$(ISCSI_VERSION_STR)\"
+ 
+-CFLAGS += -L../redhat-linux-build
++CFLAGS += -L../build
  LDLIBS += -lopeniscsiusr -lkmod -lcrypto
  
 -LIB = libiscsi.so.0
