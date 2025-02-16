@@ -129,23 +129,23 @@ Interfejs Pythona 3 do biblioteki Open-iSCSI.
 
 %prep
 %setup -q
-%patch1 -p1
-%patch5 -p1
-%patch8 -p1
-%patch9 -p1
-%patch10 -p1
-%patch11 -p1
-%patch12 -p1
-%patch13 -p1
-%patch14 -p1
-%patch15 -p1
-%patch16 -p1
-%patch19 -p1
-%patch22 -p1
-%patch23 -p1
-%patch24 -p1
-%patch100 -p1
-%patch101 -p1
+%patch -P1 -p1
+%patch -P5 -p1
+%patch -P8 -p1
+%patch -P9 -p1
+%patch -P10 -p1
+%patch -P11 -p1
+%patch -P12 -p1
+%patch -P13 -p1
+%patch -P14 -p1
+%patch -P15 -p1
+%patch -P16 -p1
+%patch -P19 -p1
+%patch -P22 -p1
+%patch -P23 -p1
+%patch -P24 -p1
+%patch -P100 -p1
+%patch -P101 -p1
 
 %build
 cd iscsiuio
