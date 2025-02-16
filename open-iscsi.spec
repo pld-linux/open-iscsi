@@ -7,42 +7,36 @@
 Summary:	iSCSI - SCSI over IP
 Summary(pl.UTF-8):	iSCSI - SCSI po IP
 Name:		open-iscsi
-Version:	2.1.7
+Version:	2.1.10
 Release:	1
 License:	GPL v2
 Group:		Networking/Daemons
 #Source0Download: https://github.com/open-iscsi/open-iscsi/releases
 Source0:	https://github.com/open-iscsi/open-iscsi/archive/%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	87f37b0968ff91ed0253d53d497da4cb
+# Source0-md5:	f06396d90cd7b3c6a38ffcfec1eaaf73
 Source1:	%{name}.init
 Source2:	%{name}.sysconfig
 Source3:	%{name}-devices.init
 Source4:	iscsiuio.logrotate
+Source5:	%{name}-tmpfiles.conf
 # Fedora patches
-Patch1:		0001-unit-file-tweaks.patch
-# idmb_rec_write refactoring skipped, see 75c46b011d7485a4b5676d824c7f3cdea2076f49
-Patch5:		0005-update-initscripts-and-docs.patch
-# use-var-for-config, use-red-hat-for-name skipped
-Patch8:		0008-libiscsi.patch
-Patch9:		0009-Add-macros-to-release-GIL-lock.patch
-Patch10:	0010-libiscsi-introduce-sessions-API.patch
-Patch11:	0011-libiscsi-fix-discovery-request-timeout-regression.patch
-Patch12:	0012-libiscsi-format-security-build-errors.patch
-Patch13:	0013-libiscsi-fix-build-to-use-libopeniscsiusr.patch
-Patch14:	0014-libiscsi-fix-build-against-latest-upstream-again.patch
-Patch15:	0015-remove-the-offload-boot-supported-ifdef.patch
-Patch16:	0016-Revert-iscsiadm-return-error-when-login-fails.patch
-# dont-install-scripts, use-var-lib-iscsi-in-libopeniscsiusr skipped
-Patch19:	0019-Coverity-scan-fixes.patch
-# fix-upstream-build-breakage-of-iscsiuio-LDFLAGS obsolete in 2.1.7
-# use-Red-Hat-version-string-to-match-RPM-package-vers skipped
-Patch22:	0022-iscsi_if.h-replace-zero-length-array-with-flexible-a.patch
-Patch23:	0023-stop-using-Werror-for-now.patch
-Patch24:	0024-minor-service-file-updates.patch
-# Remove-dependences-from-iscsi-init.service obsolete in 2.1.7
+Patch1:		0001-meson-don-t-hide-things-with-Wno-all.patch
+Patch2:		0002-Currently-when-iscsi.service-is-installed-it-creates.patch
+Patch3:		0003-Use-DBROOT-in-iscsi-starter.-Include-iscsi-starter-i.patch
+# 0004-fix-systemctl-path-in-iscsi-starter.service replaced by adjusted change in -systemd.patch
+Patch5:		0005-improved-onboot-and-shutdown-services.patch
+Patch6:		0006-iscsid.conf-Fedora-Red-Hat-defaults.patch
+Patch7:		0007-Disable-Data-Digests.patch
+Patch8:		0008-Revert-iscsiadm-return-error-when-login-fails.patch
+Patch9:		0009-Coverity-scan-fixes.patch
+# 0010-use-Red-Hat-version-string-to-match-RPM-package-vers skipped
+Patch101:	0101-libiscsi.patch
+Patch102:	0102-libiscsi-introduce-sessions-API.patch
+Patch103:	0103-fix-libiscsi-firmware-discovery-issue-with-NULL-drec.patch
+Patch104:	0104-libiscsi-build-fixes.patch
 # PLD specific
-Patch100:	%{name}-systemd.patch
-Patch101:	%{name}-libiscsi.patch
+Patch200:	%{name}-systemd.patch
+Patch201:	%{name}-libiscsi.patch
 URL:		https://www.open-iscsi.com/
 BuildRequires:	doxygen
 BuildRequires:	kmod-devel
@@ -130,39 +124,37 @@ Interfejs Pythona 3 do biblioteki Open-iSCSI.
 %prep
 %setup -q
 %patch -P1 -p1
+%patch -P2 -p1
+%patch -P3 -p1
 %patch -P5 -p1
+%patch -P6 -p1
+%patch -P7 -p1
 %patch -P8 -p1
 %patch -P9 -p1
-%patch -P10 -p1
-%patch -P11 -p1
-%patch -P12 -p1
-%patch -P13 -p1
-%patch -P14 -p1
-%patch -P15 -p1
-%patch -P16 -p1
-%patch -P19 -p1
-%patch -P22 -p1
-%patch -P23 -p1
-%patch -P24 -p1
-%patch -P100 -p1
 %patch -P101 -p1
+%patch -P102 -p1
+%patch -P103 -p1
+%patch -P104 -p1
+%patch -P200 -p1
+%patch -P201 -p1
 
 %build
-cd iscsiuio
-%{__libtoolize}
-%{__aclocal}
-%{__autoconf}
-%{__autoheader}
-%{__automake}
-%configure \
-	%{!?with_systemd:--without-systemd}
-cd ..
+%meson \
+	-Ddbroot=%{_sysconfdir}/iscsi \
+	-Discsi_sbindir=/sbin \
+	%{!?with_systemd:-Dno_systemd=true} \
+	-Drulesdir=/lib/udev/rules.d \
+	-Dsystemddir=/lib/systemd
 
-%{__make} \
+%meson_build
+
+%{__make} libiscsi \
 	CC="%{__cc}" \
+	LDFLAGS="%{rpmldflags}" \
 	OPTFLAGS="%{rpmcflags} %{rpmcppflags} %{!?with_systemd:-DNO_SYSTEMD}" \
-	SED=sed \
-	KSUBLEVEL=0
+	DBROOT=%{_sysconfdir}/iscsi \
+	KSUBLEVEL=0 \
+	SED=sed
 
 cd libiscsi
 %if %{with python2}
@@ -176,13 +168,10 @@ cd libiscsi
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/{nodes,send_targets,static,isns,slp,ifaces} \
 	$RPM_BUILD_ROOT/etc/{rc.d/init.d,sysconfig,logrotate.d} \
-	$RPM_BUILD_ROOT%{systemdunitdir} \
-	$RPM_BUILD_ROOT{/sbin,/lib/systemd/pld-helpers.d}
+	$RPM_BUILD_ROOT%{systemdtmpfilesdir} \
+	$RPM_BUILD_ROOT/lib/systemd/pld-helpers.d
 
-%{__make} -j1 install_programs install_doc install_etc install_libopeniscsiusr install_iscsiuio \
-	DESTDIR=$RPM_BUILD_ROOT \
-	LIB_DIR=%{_libdir} \
-	RULESDIR=/lib/udev/rules.d
+%meson_install
 
 :> $RPM_BUILD_ROOT%{_sysconfdir}/iscsi/initiatorname.iscsi
 
@@ -192,19 +181,7 @@ install %{SOURCE3} $RPM_BUILD_ROOT/etc/rc.d/init.d/iscsi
 # or use upstream file instead?
 cp -p %{SOURCE4} $RPM_BUILD_ROOT/etc/logrotate.d/iscsiuio
 %{__rm} $RPM_BUILD_ROOT/etc/logrotate.d/iscsiuiolog
-
-install usr/iscsistart $RPM_BUILD_ROOT%{_sbindir}
-cp -p doc/iscsistart.8 $RPM_BUILD_ROOT%{_mandir}/man8
-#install doc/iscsi-iname.8 $RPM_BUILD_ROOT%{_mandir}/man8
-
-cp -p etc/systemd/iscsi.service $RPM_BUILD_ROOT%{systemdunitdir}
-cp -p etc/systemd/iscsi-init.service $RPM_BUILD_ROOT%{systemdunitdir}
-cp -p etc/systemd/iscsi-onboot.service $RPM_BUILD_ROOT%{systemdunitdir}
-cp -p etc/systemd/iscsi-shutdown.service $RPM_BUILD_ROOT%{systemdunitdir}
-cp -p etc/systemd/iscsid.service $RPM_BUILD_ROOT%{systemdunitdir}
-cp -p etc/systemd/iscsid.socket $RPM_BUILD_ROOT%{systemdunitdir}
-cp -p etc/systemd/iscsiuio.service $RPM_BUILD_ROOT%{systemdunitdir}
-cp -p etc/systemd/iscsiuio.socket $RPM_BUILD_ROOT%{systemdunitdir}
+cp -p %{SOURCE5} $RPM_BUILD_ROOT%{systemdtmpfilesdir}/open-iscsi.conf
 
 install etc/systemd/iscsi-mark-root-nodes $RPM_BUILD_ROOT/lib/systemd/pld-helpers.d
 
@@ -282,11 +259,14 @@ fi
 %{systemdunitdir}/iscsi-init.service
 %{systemdunitdir}/iscsi-onboot.service
 %{systemdunitdir}/iscsi-shutdown.service
+%{systemdunitdir}/iscsi-starter.service
 %{systemdunitdir}/iscsid.service
 %{systemdunitdir}/iscsid.socket
 %{systemdunitdir}/iscsiuio.service
 %{systemdunitdir}/iscsiuio.socket
 %attr(755,root,root) /lib/systemd/pld-helpers.d/iscsi-mark-root-nodes
+%attr(755,root,root) /lib/systemd/system-generators/ibft-rule-generator
+%{systemdtmpfilesdir}/open-iscsi.conf
 %attr(755,root,root) %{_sbindir}/brcm_iscsiuio
 %attr(755,root,root) %{_sbindir}/iscsi-gen-initiatorname
 %attr(755,root,root) %{_sbindir}/iscsi-iname
