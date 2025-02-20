@@ -255,6 +255,7 @@ fi
 %attr(754,root,root) /etc/rc.d/init.d/iscsi
 %attr(754,root,root) /etc/rc.d/init.d/iscsid
 /lib/udev/rules.d/50-iscsi-firmware-login.rules
+%if %{with systemd}
 %{systemdunitdir}/iscsi.service
 %{systemdunitdir}/iscsi-init.service
 %{systemdunitdir}/iscsi-onboot.service
@@ -266,6 +267,7 @@ fi
 %{systemdunitdir}/iscsiuio.socket
 %attr(755,root,root) /lib/systemd/pld-helpers.d/iscsi-mark-root-nodes
 %attr(755,root,root) /lib/systemd/system-generators/ibft-rule-generator
+%endif
 %{systemdtmpfilesdir}/open-iscsi.conf
 %attr(755,root,root) %{_sbindir}/brcm_iscsiuio
 %attr(755,root,root) %{_sbindir}/iscsi-gen-initiatorname
